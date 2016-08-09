@@ -140,13 +140,13 @@ public class InformationSystemManagement {
 
             File mulvalInputFile = new File(ProjectProperties.getProperty("mulval-input"));
 
-            File mulvalOutputFile = new File(outputFolderPath + "/AttackGraph.xml");
+            File mulvalOutputFile = new File(outputFolderPath + "/.xml");
             if (mulvalOutputFile.exists()) {
                 mulvalOutputFile.delete();
             }
 
             Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
-            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-l");
+            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
 
             if (ProjectProperties.getProperty("mulval-rules-path") != null) {
                 processBuilder.command().add("-r");
@@ -159,6 +159,8 @@ public class InformationSystemManagement {
             processBuilder.environment().put("PATH", mulvalPath + "/utils/:" + xsbPath + ":" + path);
             Process process = processBuilder.start();
             process.waitFor();
+            
+            Logger.getAnonymousLogger().log(Level.INFO, "command :" + processBuilder.command().toString());
 
             if (!mulvalOutputFile.exists()) {
                 Logger.getAnonymousLogger().log(Level.INFO, "Empty attack graph!");
@@ -244,6 +246,8 @@ public class InformationSystemManagement {
             String routingPath = ProjectProperties.getProperty("routing-path");
             String flowMatrixPath = ProjectProperties.getProperty("flow-matrix-path");
             String vulnerabilityScanPath = ProjectProperties.getProperty("vulnerability-scan-path");
+            String openvasScanPath = ProjectProperties.getProperty("openvas-scan-path");
+            String genericScanPath = ProjectProperties.getProperty("generic-scan-path");
             String mulvalInputPath = ProjectProperties.getProperty("mulval-input");
             String topologyPath = ProjectProperties.getProperty("topology-path");
 
@@ -261,11 +265,26 @@ public class InformationSystemManagement {
                     "--hosts-interfaces-file", hostInterfacePath,
                     "--vlans-file", vlansPath,
                     "--flow-matrix-file", flowMatrixPath,
-                    "--vulnerability-scan", vulnerabilityScanPath,
                     "--routing-file", routingPath,
                     "--mulval-output-file", mulvalInputFile.getAbsolutePath(),
                     "--to-fiware-xml-topology", topologyPath
             );
+            
+            if  (vulnerabilityScanPath != null && vulnerabilityScanPath != "") {
+            	processBuilder.command().add("--vulnerability-scan");
+            	processBuilder.command().add(vulnerabilityScanPath);
+            }
+            if  (genericScanPath != null && genericScanPath != "") {
+            	processBuilder.command().add("--generic-scan");
+            	processBuilder.command().add(genericScanPath);
+            }
+            if  (openvasScanPath != null && openvasScanPath != "") {
+            	processBuilder.command().add("--openvas-scan");
+            	processBuilder.command().add(openvasScanPath);
+            }
+            
+           // processBuilder.command().add("--mulval-output-file " + mulvalInputFile.getAbsolutePath() + " --to-fiware-xml-topology " + topologyPath);
+            
             processBuilder.directory(new File(mulvalInputScriptFolder));
             StringBuilder command = new StringBuilder();
             for (String str : processBuilder.command())
