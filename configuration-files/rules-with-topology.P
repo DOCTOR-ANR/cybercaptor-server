@@ -75,7 +75,8 @@ interaction_rule(
 interaction_rule(
   (execCode(Host, root) :-
 	execCode(Host, _Perm2),
-	vulExists(Host, _, Software, localExploit, privEscalation)),
+	vulExists(Host, _, Software, localExploit, privEscalation),
+	_Perm2 \== root),
   rule_desc('local exploit',
   1.0)).
 
@@ -204,3 +205,71 @@ interaction_rule(
 
 
 
+/* primitive predicates declaration */
+
+primitive(vmOnHost(_vm,_host,_software,_user)).
+primitive(vmInDomain(_vm,_orchestrator)).
+primitive(vnfOnPath(_vnf,_host1,_host2,_port,_daemon,_user)).
+primitive(localServiceInfo(_servicename, _host, _program, _user)).
+
+/* derived predicates declaration */
+
+derived(execCode(_host,_user)).
+derived(accessFile(_machine, _access, _filepath)).
+derived(orchestratorCompromised(_orchestrator)).
+
+/* tabling predicates */
+
+:- table execCode/1.
+:- table execCode/2.
+:- table execCode/4.
+:- table accessFile/2.
+:- table orchestratorCompromised/2.
+
+/* interaction rules */
+
+interaction_rule(
+	(execCode(Hypervisor, User) :-
+		execCode(Vm, _), vmOnHost(Vm, Hypervisor, Software, User), vulExists(Hypervisor, Vuln, Software), vulProperty(Vuln, localExploit, privEscalation)),
+	rule_desc('can escape from VM to host', 1)).
+	
+interaction_rule(
+	(execCode(Hypervisor, User) :-
+		execCode(Vm, _), vmOnHost(Vm, Hypervisor, Software, User), vulExists(Hypervisor, Vuln, Software, localExploit, privEscalation)),
+	rule_desc('can escape from VM to host', 1)).
+
+interaction_rule(
+	(execCode(Host, User) :-
+		execCode(Host, root), User \== root),
+	rule_desc('root can impersonate any user', 1)).
+
+interaction_rule(
+	(execCode(Vm, root) :-
+		vmOnHost(Vm, Hypervisor, _, User), execCode(Hypervisor, User)),
+	rule_desc('VM runs on compromised host so it is compromised', 1)).
+
+interaction_rule(
+	(accessFile(Vm, _, _) :-
+		vmOnHost(Vm, Hypervisor, _, User), execCode(Hypervisor, User)),
+	rule_desc('Can access VM filesystem through hypervisor', 1)).
+
+/* Trojan rule : to complete*/
+/*interaction_rule(*/
+/*	(execCode(Vm, root) :-*/
+/*		vmOnHost(Vm, Hypervisor, _, User), accessFile(Vm, write, _)),*/
+/*	rule_desc('Can install trojan on VM', 1)).*/
+
+interaction_rule(
+	(orchestratorCompromised(Orchestrator) :-
+		localServiceInfo(Orchestrator, Host, Program, User), execCode(Host, User)),
+	rule_desc('Can take over orchestrator from its host', 1)).
+
+interaction_rule(
+	(execCode(Vm, root) :-
+		vmInDomain(Vm, Orchestrator), orchestratorCompromised(Orchestrator)),
+	rule_desc('VM controlled by compromised orchestrator', 1)).
+
+interaction_rule(
+	(execCode(Vnf, User) :-
+		vnfOnPath(Vnf, Host1, Host2, Port, Software, User), execCode(Host1, _), vulExists(Vnf, Vuln, Software), vulProperty(Vuln, vnfExploit, privEscalation)),
+	rule_desc('can execute code on VNF 3 party interaction rule', 1)).
