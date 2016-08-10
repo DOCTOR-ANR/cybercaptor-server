@@ -250,6 +250,7 @@ public class InformationSystemManagement {
             String genericScanPath = ProjectProperties.getProperty("generic-scan-path");
             String mulvalInputPath = ProjectProperties.getProperty("mulval-input");
             String topologyPath = ProjectProperties.getProperty("topology-path");
+            String vmPlacementPath = ProjectProperties.getProperty("placement-path");
 
 
             File mulvalInputFile = new File(mulvalInputPath);
@@ -282,8 +283,11 @@ public class InformationSystemManagement {
             	processBuilder.command().add("--openvas-scan");
             	processBuilder.command().add(openvasScanPath);
             }
+            if  (vmPlacementPath != null && vmPlacementPath != "") {
+            	processBuilder.command().add("--vm-mapping-file");
+            	processBuilder.command().add(vmPlacementPath);
+            }
             
-           // processBuilder.command().add("--mulval-output-file " + mulvalInputFile.getAbsolutePath() + " --to-fiware-xml-topology " + topologyPath);
             
             processBuilder.directory(new File(mulvalInputScriptFolder));
             StringBuilder command = new StringBuilder();
