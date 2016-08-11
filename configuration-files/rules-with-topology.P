@@ -267,7 +267,7 @@ interaction_rule(
 interaction_rule(
 	(execCode(Vm, root) :-
 		vmInDomain(Vm, Orchestrator), orchestratorCompromised(Orchestrator)),
-	rule_desc('VM controlled by compromised orchestrator', 1)).
+	rule_desc('Host controlled by compromised orchestrator or controller', 1)).
 
 interaction_rule(
 	(execCode(Vnf, User) :-

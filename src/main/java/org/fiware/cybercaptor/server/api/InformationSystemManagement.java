@@ -251,6 +251,7 @@ public class InformationSystemManagement {
             String mulvalInputPath = ProjectProperties.getProperty("mulval-input");
             String topologyPath = ProjectProperties.getProperty("topology-path");
             String vmPlacementPath = ProjectProperties.getProperty("placement-path");
+            String controllersPath = ProjectProperties.getProperty("controllers-path");
 
 
             File mulvalInputFile = new File(mulvalInputPath);
@@ -286,6 +287,10 @@ public class InformationSystemManagement {
             if  (vmPlacementPath != null && vmPlacementPath != "") {
             	processBuilder.command().add("--vm-mapping-file");
             	processBuilder.command().add(vmPlacementPath);
+            }
+            if  (controllersPath != null && controllersPath != "") {
+            	processBuilder.command().add("--controllers-file");
+            	processBuilder.command().add(controllersPath);
             }
             
             
