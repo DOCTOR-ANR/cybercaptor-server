@@ -269,9 +269,12 @@ public class InformationSystemManagement {
                     "--flow-matrix-file", flowMatrixPath,
                     "--routing-file", routingPath,
                     "--mulval-output-file", mulvalInputFile.getAbsolutePath(),
-                    "--to-fiware-xml-topology", topologyPath
+                    "--to-fiware-xml-topology", topologyPath,
+                    "--vm-mapping-file", vmPlacementPath,
+                    "--controllers-file",  controllersPath
             );
             
+            /* these ones are optional, but at least one of them should be passed */
             if  (vulnerabilityScanPath != null && vulnerabilityScanPath != "") {
             	processBuilder.command().add("--vulnerability-scan");
             	processBuilder.command().add(vulnerabilityScanPath);
@@ -283,14 +286,6 @@ public class InformationSystemManagement {
             if  (openvasScanPath != null && openvasScanPath != "") {
             	processBuilder.command().add("--openvas-scan");
             	processBuilder.command().add(openvasScanPath);
-            }
-            if  (vmPlacementPath != null && vmPlacementPath != "") {
-            	processBuilder.command().add("--vm-mapping-file");
-            	processBuilder.command().add(vmPlacementPath);
-            }
-            if  (controllersPath != null && controllersPath != "") {
-            	processBuilder.command().add("--controllers-file");
-            	processBuilder.command().add(controllersPath);
             }
             
             
