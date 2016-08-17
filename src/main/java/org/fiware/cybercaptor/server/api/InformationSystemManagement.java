@@ -85,7 +85,7 @@ public class InformationSystemManagement {
 
             File mulvalInputFile = new File(ProjectProperties.getProperty("mulval-input"));
 
-            File mulvalOutputFile = new File(outputFolderPath + "/AttackGraph.xml");
+            File mulvalOutputFile = new File(outputFolderPath + "/.xml");
             if (mulvalOutputFile.exists()) {
                 mulvalOutputFile.delete();
             }
@@ -93,7 +93,7 @@ public class InformationSystemManagement {
             informationSystem.exportToMulvalDatalogFile(mulvalInputFile.getAbsolutePath());
 
             Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
-            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-l");
+            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
 
             if (ProjectProperties.getProperty("mulval-rules-path") != null) {
                 processBuilder.command().add("-r");

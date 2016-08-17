@@ -22,6 +22,7 @@
 package org.fiware.cybercaptor.server.topology.asset;
 
 
+import org.fiware.cybercaptor.server.informationsystem.PhysicalHostInformation;
 import org.fiware.cybercaptor.server.topology.Topology;
 import org.fiware.cybercaptor.server.topology.asset.component.*;
 
@@ -65,6 +66,18 @@ public class Host implements Cloneable {
      * The topology in which is the host
      */
     private Topology topology = null;
+    
+    /**
+     * The physical host the machine runs on (if it is a VM)
+     */
+    
+    private PhysicalHostInformation physicalHost = null;
+    
+    /**
+     *  The controllers and orchestrators the host depends of
+     */
+    
+    private List<String> controllers = new ArrayList<String>();
 
     /**
      * Create an empty host
@@ -605,5 +618,45 @@ public class Host implements Cloneable {
     @Override
     public String toString() {
         return getName();
+    }
+    
+    /**
+     * @return the physical host
+     */
+    public PhysicalHostInformation getPhysicalHost()
+    {
+    	return physicalHost;
+    }
+    
+    /**
+     * @return the controllers list
+     */
+    public List<String> getControllers()
+    {
+    	return controllers;
+    }
+    
+    /**
+     * @param phi
+     */
+    public void setPhysicalHost(PhysicalHostInformation phi)
+    {
+    	physicalHost = phi;
+    }
+    
+    /**
+     * @param cs
+     */
+    public void setControllers(List<String> cs)
+    {
+    	controllers = cs;
+    }
+    
+    /**
+     * @param c
+     */
+    public void addController(String c)
+    {
+    	controllers.add(c);
     }
 }

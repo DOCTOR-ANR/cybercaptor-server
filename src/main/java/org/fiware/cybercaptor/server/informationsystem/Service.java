@@ -47,6 +47,12 @@ public class Service implements Cloneable {
      * The name of the service
      */
     private String name = "";
+    
+    /**
+     * The global name of the service, to identify it unically on the network
+     */
+    
+    private String globalName = "";
 
     /**
      * The IP address listening to the service
@@ -344,6 +350,13 @@ public class Service implements Cloneable {
     public String getName() {
         return name;
     }
+    
+    /**
+     * Get the global name of the service
+     */
+    public String getGlobalName() {
+        return globalName;
+    }
 
     /**
      * Set the name of the service
@@ -352,6 +365,15 @@ public class Service implements Cloneable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+    
+    /**
+     * Set the global name of the service
+     *
+     * @param globalName the new name
+     */
+    public void setGlobalName(String globalName) {
+        this.globalName = globalName;
     }
 
     /**

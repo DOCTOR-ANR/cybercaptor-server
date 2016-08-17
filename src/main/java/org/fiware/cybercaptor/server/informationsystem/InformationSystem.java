@@ -119,6 +119,16 @@ public class InformationSystem implements Cloneable {
             InformationSystemHost informationSystemHost = (InformationSystemHost) host;
             fichier.println("attackerLocated('" + host.getName() + "').");
             fichier.println("attackGoal(execCode('" + host.getName() + "', _)).");
+            PhysicalHostInformation physicalHost = host.getPhysicalHost();
+            if  (physicalHost != null)
+            {
+            	fichier.println("vmOnHost('"+ host.getName() + "','" + physicalHost.getHost() + "','" + physicalHost.getHypervisor() + "','" + physicalHost.getUser() + "').");
+            }
+            List<String> controllers = host.getControllers();
+            for (String controller : controllers)
+            {
+            	fichier.println("vmInDomain('" + host.getName() + "','" + controller + "').");
+            }
             for (Interface networkInterface : host.getInterfaces().values()) {
                 fichier.println("hasIP('" + host.getName() + "','" + networkInterface.getAddress().toString() + "').");
                 if (networkInterface.getVlan() != null && !networkInterface.getVlan().getName().isEmpty()) {
@@ -128,8 +138,15 @@ public class InformationSystem implements Cloneable {
             fichier.println("hostAllowAccessToAllIP('" + host.getName() + "').");
             for (Service service : informationSystemHost.getServices().values()) {
                 fichier.println("installed('" + host.getName() + "','" + service.getName() + "').");
-                if (service.getPortNumber() != 0) {
+                if (service.getPortNumber() != 0)
+                {
                     fichier.println("networkServiceInfo('" + service.getIpAddress() + "', '" + service.getName() + "', '" + service.getProtocol().toString() + "', " + service.getPortNumber() + ", 'user').");
+                }
+                else
+                {
+                	String globalName = service.getGlobalName();
+                	if  (globalName == null) globalName = host.getName(); 
+                	fichier.println("localServiceInfo('" + globalName + "', '" + host.getName() + "', '" + service.getName() + "', '" + "user" + "').");
                 }
 
                 for (String cve : service.getVulnerabilities().keySet()) {

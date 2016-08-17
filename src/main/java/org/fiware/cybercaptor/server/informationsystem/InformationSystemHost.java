@@ -236,6 +236,30 @@ public class InformationSystemHost extends Host {
             SecurityRequirement securityRequirement = new SecurityRequirement("sec-req-xml", securityRequirementValue);
             this.addSecurityRequirements(securityRequirement);
         }
+        
+        // physical host
+        Element physicalElement = domElement.getChild("physical_host");
+        if (physicalElement != null)
+        {
+        	Element physicalHostHost = physicalElement.getChild("hostname");
+        	Element physicalHostHypervisor = physicalElement.getChild("hypervisor");
+        	Element physicalHostUser = physicalElement.getChild("user");
+        	if (physicalHostHost != null && physicalHostHypervisor != null && physicalHostUser != null)
+        	{
+        		this.setPhysicalHost(new PhysicalHostInformation(physicalHostHost.getText(), physicalHostHypervisor.getText(), physicalHostUser.getText()));
+        	}
+        }
+        
+        // controllers
+        Element controllersElement = domElement.getChild("controllers");
+        if (controllersElement != null)
+        {
+        	List<Element> controllers = controllersElement.getChildren("controller");
+        	for (Element controller : controllers)
+        	{
+        		this.addController(controller.getText());
+        	}
+        }
 
         //Host interfaces
         Element interfacesElement = domElement.getChild("interfaces");
@@ -290,6 +314,12 @@ public class InformationSystemHost extends Host {
                         service.setMachine(this);
                     } else {
                         service = this.services.get(serviceName);
+                    }
+                    
+                    Element serviceGlobalName = serviceElement.getChild("global_name");
+                    if (serviceGlobalName != null)
+                    {
+                    	service.setGlobalName(serviceGlobalName.getText());
                     }
 
 
