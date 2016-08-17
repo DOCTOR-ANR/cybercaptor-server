@@ -196,7 +196,7 @@ public class InformationSystem implements Cloneable {
                         if (sourceElement.getResource() instanceof Interface && destinationElement.getResource() instanceof Interface) {
                             Interface sourceInterface = (Interface) sourceElement.getResource();
                             Interface destinationInterface = (Interface) destinationElement.getResource();
-                            fichier.println("haclprimit('" + sourceInterface.getAddress() + "','" + destinationInterface.getAddress() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("haclprimit('" + sourceInterface.getAddress() + "','" + destinationInterface.getAddress() + "', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -204,7 +204,7 @@ public class InformationSystem implements Cloneable {
                             destinationElement.getType().equals(FlowMatrixElement.FlowMatrixElementType.IP)) {
                         if (destinationElement.getResource() instanceof Interface) {
                             Interface destinationInterface = (Interface) destinationElement.getResource();
-                            fichier.println("vlanToIP('internet','" + destinationInterface.getAddress() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("vlanToIP('internet','" + destinationInterface.getAddress() + "', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -213,7 +213,7 @@ public class InformationSystem implements Cloneable {
                         if (sourceElement.getResource() instanceof VLAN && destinationElement.getResource() instanceof Interface) {
                             VLAN sourceVlan = (VLAN) sourceElement.getResource();
                             Interface destinationInterface = (Interface) destinationElement.getResource();
-                            fichier.println("vlanToIP('" + sourceVlan.getName() + "','" + destinationInterface.getAddress() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("vlanToIP('" + sourceVlan.getName() + "','" + destinationInterface.getAddress() + "', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -222,7 +222,7 @@ public class InformationSystem implements Cloneable {
                         if (sourceElement.getResource() instanceof Interface && destinationElement.getResource() instanceof VLAN) {
                             Interface sourceInterface = (Interface) sourceElement.getResource();
                             VLAN destinationVlan = (VLAN) destinationElement.getResource();
-                            fichier.println("ipToVlan('" + sourceInterface.getAddress() + "','" + destinationVlan.getName() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("ipToVlan('" + sourceInterface.getAddress() + "','" + destinationVlan.getName() + "', " + mulvalProtocol + "," +  mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -230,7 +230,7 @@ public class InformationSystem implements Cloneable {
                             destinationElement.getType().equals(FlowMatrixElement.FlowMatrixElementType.VLAN)) {
                         if (destinationElement.getResource() instanceof VLAN) {
                             VLAN destinationVLAN = (VLAN) destinationElement.getResource();
-                            fichier.println("vlanToVlan('internet','" + destinationVLAN.getName() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("vlanToVlan('internet','" + destinationVLAN.getName() + "', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -239,7 +239,7 @@ public class InformationSystem implements Cloneable {
                         if (sourceElement.getResource() instanceof VLAN && destinationElement.getResource() instanceof VLAN) {
                             VLAN sourceVLAN = (VLAN) sourceElement.getResource();
                             VLAN destinationVLAN = (VLAN) destinationElement.getResource();
-                            fichier.println("vlanToVlan('" + sourceVLAN.getName() + "','" + destinationVLAN.getName() + "', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("vlanToVlan('" + sourceVLAN.getName() + "','" + destinationVLAN.getName() + "', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -247,7 +247,7 @@ public class InformationSystem implements Cloneable {
                             destinationElement.getType().equals(FlowMatrixElement.FlowMatrixElementType.INTERNET)) {
                         if (sourceElement.getResource() instanceof Interface) {
                             Interface sourceInterface = (Interface) sourceElement.getResource();
-                            fichier.println("ipToVlan('" + sourceInterface.getAddress() + "','internet', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("ipToVlan('" + sourceInterface.getAddress() + "','internet', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
@@ -255,7 +255,7 @@ public class InformationSystem implements Cloneable {
                             destinationElement.getType().equals(FlowMatrixElement.FlowMatrixElementType.INTERNET)) {
                         if (sourceElement.getResource() instanceof VLAN) {
                             VLAN sourceVLAN = (VLAN) sourceElement.getResource();
-                            fichier.println("vlanToVlan('" + sourceVLAN.getName() + "','internet', " + mulvalDestinationPort + "," + mulvalProtocol + ").");
+                            fichier.println("vlanToVlan('" + sourceVLAN.getName() + "','internet', " + mulvalProtocol + "," + mulvalDestinationPort + ").");
                         } else {
                             throw new IllegalStateException("Illegal resource type");
                         }
