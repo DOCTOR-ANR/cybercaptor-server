@@ -186,6 +186,36 @@ public class InformationSystemHost extends Host {
         Element cpeElement = new Element("cpe");
         cpeElement.setText("cpe:/");
         root.addContent(cpeElement);
+        
+        // the physical host
+        if  (this.getPhysicalHost() != null)
+        {
+        	Element physicalHostElement = new Element("physical_host");
+            Element phHostname = new Element("hostname");
+            Element phHypervisor = new Element("hypervisor");
+            Element phUser = new Element("user");
+            phHostname.setText(this.getPhysicalHost().getHost());
+            phHypervisor.setText(this.getPhysicalHost().getHypervisor());
+            phUser.setText(this.getPhysicalHost().getUser());
+            physicalHostElement.addContent(phHostname);
+            physicalHostElement.addContent(phHypervisor);
+            physicalHostElement.addContent(phUser);
+            root.addContent(physicalHostElement);
+        }
+        
+        // controllers
+        List<String> controllers = this.getControllers();
+        if  (controllers != null && controllers.size() > 0)
+        {
+        	Element controllersElement = new Element("controllers");
+        	for (String controller : controllers)
+        	{
+        		Element controllerElement = new Element("controller");
+        		controllerElement.setText(controller);
+        		controllersElement.addContent(controllerElement);
+        	}
+        	root.addContent(controllersElement);
+        }
 
         //Interfaces
         Element interfacesElement = new Element("interfaces");

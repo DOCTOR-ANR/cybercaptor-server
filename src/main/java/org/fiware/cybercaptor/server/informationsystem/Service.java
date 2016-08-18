@@ -202,6 +202,13 @@ public class Service implements Cloneable {
         Element nameElement = new Element("name");
         nameElement.setText(this.getName());
         root.addContent(nameElement);
+        
+        if (this.getGlobalName() != null)
+        {
+        	Element globalNameElement = new Element("global_name");
+        	globalNameElement.setText(this.getGlobalName());
+        	root.addContent(globalNameElement);
+        }
 
         if (this.getIpAddress() != null) {
             Element ipaddressElement = new Element("ipaddress");
