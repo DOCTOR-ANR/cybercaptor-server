@@ -24,6 +24,8 @@ package org.fiware.cybercaptor.server.flowmatrix;
 import org.fiware.cybercaptor.server.topology.Topology;
 import org.fiware.cybercaptor.server.topology.asset.component.FirewallRule;
 import org.fiware.cybercaptor.server.topology.asset.component.PortRange;
+import org.fiware.cybercaptor.server.topology.asset.VLAN;
+import org.fiware.cybercaptor.server.topology.asset.component.Interface;
 import org.jdom2.Element;
 
 /**
@@ -63,7 +65,7 @@ public class FlowMatrixLine {
      * @param element  the XML DOM Element
      * @param topology the network topology object
      */
-    public FlowMatrixLine(Element element, Topology topology) {
+    public FlowMatrixLine(Element element, Topology topology) throws Exception {
         if (element == null)
             throw new IllegalArgumentException("The flow matrix line element is null");
         source = new FlowMatrixElement(element.getChild("source"), topology);
@@ -71,6 +73,59 @@ public class FlowMatrixLine {
         source_port = PortRange.fromString(element.getChildText("source_port"));
         destination_port = PortRange.fromString(element.getChildText("destination_port"));
         protocol = FirewallRule.Protocol.getProtocolFromString(element.getChildText("protocol"));
+    }
+    
+    public Element toDomXMLElement() throws Exception
+    {
+    	Element root = new Element("flow-matrix-line");
+    	Element sourceElement = new Element("source");
+    	Element destinationElement = new Element("destination");
+    	Element sourcePortElement = new Element("source_port");
+    	Element destinationPortElement = new Element("destination_port");
+    	Element protocolElement = new Element("protocol");
+    	FlowMatrixElement.FlowMatrixElementType sourceType = source.getType();
+    	if  (source.isInternet())
+    	{
+    		sourceElement.setAttribute("type", "INTERNET");
+    	}
+    	else if (source.isVLAN())
+    	{
+    		sourceElement.setAttribute("type", "VLAN");
+    		sourceElement.setAttribute("resource", ((VLAN)source.getResource()).getName());
+    	}
+    	else if (source.isIP())
+    	{
+    		sourceElement.setAttribute("type", "IP");
+    		sourceElement.setAttribute("resource", ((Interface)source.getResource()).getAddress().toString());
+    	}
+    	else throw new Exception("Unknown Flow Matrix Element type");
+    	FlowMatrixElement.FlowMatrixElementType destType = destination.getType();
+    	if  (destination.isInternet())
+    	{
+    		destinationElement.setAttribute("type", "INTERNET");
+    	}
+    	else if (destination.isVLAN())
+    	{
+    		destinationElement.setAttribute("type", "VLAN");
+    		destinationElement.setAttribute("resource", ((VLAN)destination.getResource()).getName());
+    	}
+    	else if (destination.isIP())
+    	{
+    		destinationElement.setAttribute("type", "IP");
+    		destinationElement.setAttribute("resource", ((Interface)destination.getResource()).getAddress().toString());
+    	}
+    	else throw new Exception("Unknown Flow Matrix Element type");
+    	sourcePortElement.setText(source_port.toString());
+    	destinationPortElement.setText(destination_port.toString());
+    	protocolElement.setText(protocol.toString());
+    	
+    	root.addContent(sourceElement);
+    	root.addContent(destinationElement);
+    	root.addContent(sourcePortElement);
+    	root.addContent(destinationPortElement);
+    	root.addContent(protocolElement);
+    	
+    	return root;
     }
 
     /**

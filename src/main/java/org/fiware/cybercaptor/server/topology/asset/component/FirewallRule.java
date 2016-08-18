@@ -462,6 +462,22 @@ public class FirewallRule implements Cloneable {
         public boolean contained(Protocol prot) {
             return this == Protocol.ANY || prot == this;
         }
+        
+        public String toString()
+        {
+        	switch (this)
+        	{
+        		case TCP :
+        			return new String("TCP");
+        		case UDP :
+        			return new String("UDP");
+        		case ICMP :
+        			return new String("ICMP");
+        		case ANY :
+        			return new String("ANY");
+        	}
+        	return new String("ANY");
+        }
     }
 
     /**

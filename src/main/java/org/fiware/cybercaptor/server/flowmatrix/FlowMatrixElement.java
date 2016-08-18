@@ -118,6 +118,24 @@ public class FlowMatrixElement {
                 return false;
         }
     }
+    
+    /**
+     * @return true if this flow matrix element represents a vlan
+     */
+    public boolean isVLAN()
+    {
+    	if  (this.getType() == FlowMatrixElementType.VLAN) return true;
+    	else return false;
+    }
+    
+    /**
+     * @return true if this flow matrix element represents an IP address
+     */
+    public boolean isIP()
+    {
+    	if  (this.getType() == FlowMatrixElementType.IP) return true;
+    	else return false;
+    }
 
     /**
      * @return the type of the flow matrix element

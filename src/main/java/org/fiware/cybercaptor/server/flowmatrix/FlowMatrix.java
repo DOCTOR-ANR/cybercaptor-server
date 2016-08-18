@@ -52,12 +52,25 @@ public class FlowMatrix {
      * @param element  the XML DOM element
      * @param topology the network topology
      */
-    public FlowMatrix(Element element, Topology topology) {
+    public FlowMatrix(Element element, Topology topology) throws Exception {
         if (element != null) {
             for (Element flowMatrixLinesElement : element.getChildren("flow-matrix-line")) {
                 getFlowMatrixLines().add(new FlowMatrixLine(flowMatrixLinesElement, topology));
             }
         }
+    }
+    
+    /**
+     * Export the flow matrix to DOM XML element
+     */
+    public Element toDomXMLElement() throws Exception
+    {
+    	Element root = new Element("flow-matrix");
+    	for (FlowMatrixLine line : getFlowMatrixLines())
+    	{
+    		root.addContent(line.toDomXMLElement());
+    	}
+    	return root;
     }
 
     /**

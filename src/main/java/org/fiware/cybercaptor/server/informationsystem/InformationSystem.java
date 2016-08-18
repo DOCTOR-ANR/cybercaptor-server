@@ -445,7 +445,7 @@ public class InformationSystem implements Cloneable {
      *
      * @return the dom element corresponding to this topology with the format of the tva report file
      */
-    public Element toDomXMLElement() {
+    public Element toDomXMLElement() throws Exception {
         Element root = new Element("topology");
 
         //machines
@@ -453,6 +453,8 @@ public class InformationSystem implements Cloneable {
             InformationSystemHost machine = (InformationSystemHost) this.topology.getHosts().get(i);
             root.addContent(machine.toDomXMLElement());
         }
+        
+        root.addContent(this.flowMatrix.toDomXMLElement());
 
         return root;
     }

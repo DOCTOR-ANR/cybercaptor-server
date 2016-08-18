@@ -238,7 +238,14 @@ public class RestJsonAPI {
             return Response.ok("The monitoring object is empty. Did you forget to " +
                     "initialize it ?").build();
         }
-        return Response.ok(new XMLOutputter(Format.getPrettyFormat()).outputString(monitoring.getInformationSystem().toDomXMLElement())).build();
+        try
+        {
+        	return Response.ok(new XMLOutputter(Format.getPrettyFormat()).outputString(monitoring.getInformationSystem().toDomXMLElement())).build();
+        }
+        catch (Exception e)
+        {
+        	return RestApplication.returnErrorMessage(request, e.getMessage());
+        }
     }
 
     /**
