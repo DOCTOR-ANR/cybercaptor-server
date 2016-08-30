@@ -1,0 +1,2 @@
+# Print the number of CWEs per CWE of the NVD
+SELECT cwe.id,cwe.name,cwe.abstraction, COUNT(*) AS number_cves FROM cwe_vulnerability, cwe WHERE cwe_vulnerability.id_cwe == cwe.id GROUP BY id_cwe ORDER BY COUNT(*) DESC
