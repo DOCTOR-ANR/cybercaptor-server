@@ -1,4 +1,6 @@
-from apparmor.aa import log
+#!/usr/bin/python
+
+#from apparmor.aa import log
 
 __author__ = 'tai'
 
@@ -9,23 +11,24 @@ import sqlite3
 from datetime import date
 import logging
 import os.path
-import urllib.request
+import urllib2
 import glob
 
 NVD_FILE_PATH = "./resources/nvd/"
-DATABASE_PATH = './resources/database-full.db'
+DATABASE_PATH = '../vulnerability-remediation-database.db'
 NVD_FIRST_YEAR = 2002
 NVD_CURRENT_YEAR = date.today().year
-COMMON_URL_START = "https://nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
-COMMON_URL_END = ".xml"
+COMMON_URL_START = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-"
+COMMON_URL_END = ".xml.gz"
 FILENAME_PREFIX = "nvdcve-2.0-"
 FILENAME_POSTFIX = ".xml"
+FILENAME_POSTFIX_COMPRESSED = ".xml.gz"
 CWE_FILE_PATH = "./resources/cwe/cwec_v2.8.xml"
 
 
 def download_file_with_progress_bar(url, to_path):
     file_name = url.split('/')[-1]
-    u = urllib.request.urlopen(url)
+    u = urllib2.urlopen(url)
     f = open(to_path, 'wb')
     meta = u.info()
     file_size = int(meta["Content-Length"])
@@ -72,9 +75,11 @@ def download_nvd():
     # ex of URL : http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-2002.xml
     for year in range(NVD_FIRST_YEAR, NVD_CURRENT_YEAR + 1):
         filename = FILENAME_PREFIX + str(year) + FILENAME_POSTFIX
+        filename_compressed = FILENAME_PREFIX + str(year) + FILENAME_POSTFIX_COMPRESSED
         logging.info("Processing NVD file of " + str(year) + " : " + filename)
 
         path = NVD_FILE_PATH + filename
+	path_compressed = NVD_FILE_PATH + filename_compressed
 
         if os.path.isfile(path) and year < NVD_CURRENT_YEAR:
             logging.info("Old NVD file already exists, skipping it")
@@ -82,7 +87,9 @@ def download_nvd():
             logging.info("NVD file doesn't exist or the year is current year, I will download it.")
             url = COMMON_URL_START + str(year) + COMMON_URL_END
             logging.info("Downloading " + url + "...")
-            download_file_with_progress_bar(url, path)
+            download_file_with_progress_bar(url, path_compressed)
+	    os.system("gunzip -f " + path_compressed)
+	    logging.info("Uncompressing...")
 
             # print(url)
 
@@ -295,7 +302,7 @@ def main():
     add_cwe_file_to_database(db_cursor, CWE_FILE_PATH)
 
     # Download the NVD and update the database
-    #download_nvd()
+    download_nvd()
     update_database(db_cursor)
 
     # add_file_to_database("./resources/nvd/nvdcve-2.0-2014.xml",db_cursor)
