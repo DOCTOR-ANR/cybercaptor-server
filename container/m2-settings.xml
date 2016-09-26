@@ -1,0 +1,18 @@
+<settings>
+  <proxies>
+   <proxy>
+      <id>proxy1</id>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>proxy.theresis.thales</host>
+      <port>80</port>
+    </proxy>
+    <proxy>
+      <id>proxy1-ssl</id>
+      <active>true</active>
+      <protocol>https</protocol>
+      <host>proxy.theresis.thales</host>
+      <port>3128</port>
+    </proxy>
+  </proxies>
+</settings>
