@@ -1,0 +1,2 @@
+host;destination;mask;gateway;interface
+host;machine2;0.0.0.0;0.0.0.0;10.0.3.254;eth0
