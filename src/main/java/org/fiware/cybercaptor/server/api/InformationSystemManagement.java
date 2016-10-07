@@ -239,7 +239,7 @@ public class InformationSystemManagement {
 
             String pythonPath = ProjectProperties.getProperty("python-path");
             String mulvalInputScriptFolder = ProjectProperties.getProperty("mulval-input-script-folder");
-            String mulvalInputScriptPath = mulvalInputScriptFolder + "main.py";
+            String mulvalInputScriptPath = mulvalInputScriptFolder + "/main.py";
 
             String hostInterfacePath = ProjectProperties.getProperty("host-interfaces-path");
             String vlansPath = ProjectProperties.getProperty("vlans-path");

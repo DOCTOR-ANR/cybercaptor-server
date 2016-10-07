@@ -431,8 +431,8 @@ public class RestJsonAPI {
 
         int numberAttackPaths = monitoring.getAttackPathList().size();
 
-        if (id >= numberAttackPaths) {
-            return RestApplication.returnErrorMessage(request, "The attack path " + id + " does not exist. There are only" +
+        if (id >= numberAttackPaths || id < 0) {
+            return RestApplication.returnErrorMessage(request, "The attack path " + id + " does not exist. There are only " +
                     numberAttackPaths + " attack paths (0 to " +
                     (numberAttackPaths - 1) + ")");
         }
