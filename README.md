@@ -9,6 +9,8 @@ CyberCAPTOR is an implementation of the Cyber Security Generic Enabler, the futu
 
 Build Status: [![Build Status](https://travis-ci.org/fiware-cybercaptor/cybercaptor-server.svg)](https://travis-ci.org/fiware-cybercaptor/cybercaptor-server)
 
+NOTE : This repository was adapted to fit the needs of the DOCTOR and 5G-ENSURE projects. Namely, the container now embeds a monolithic version of CyberCAPTOR, with the API server, web client and the cyber-data-extract preprocessor. In order to complete the installation (e.g. to build the Docker container), one must clone the ```cyber-data-extract``` and -```cybercaptor-client``` repositories at the root of the ```cybercaptor-server``` repository.
+
 ## Table of Contents
 
 - [CyberCAPTOR Server](#cybercaptor-server)
@@ -37,7 +39,7 @@ Build Status: [![Build Status](https://travis-ci.org/fiware-cybercaptor/cybercap
 - Ubuntu
 - Java 1.7
 - Apache Tomcat 7
-- Apache Maven 3
+- Apache Maven 2
 - [XSB](http://xsb.sourceforge.net/)
 - [MulVAL](http://www.arguslab.org/mulval.html)
 
@@ -51,8 +53,8 @@ cd cybercaptor-server
 
 2) Use Maven to download dependencies and build the web application archive (.war).
 ```
-mvn clean
-mvn package
+mvn clean (or make clean)
+mvn package (or make)
 ```
 
 ### Installation
@@ -76,6 +78,9 @@ sudo chown -R tomcat7:tomcat7 /usr/share/tomcat7/
 cd .. #Go in the parent folder of cybercaptor-server
 git clone https://github.com/fiware-cybercaptor/cybercaptor-data-extraction.git # Clone the cyber-data-extraction for the "mulval-input-script-folder" parameter.
 ```
+```
+(or make install)
+```
 
 3) Copy and edit the configuration file
 
@@ -91,6 +96,8 @@ For more details, read the documentation [Installation And adminsitration Manual
 
 ### Build container (optional)
 
+Buildinf the container requires to have cloned the ```cybercaptor-client``` and ```cyber-data-extract``` repositories at the root of the ```cybercaptor-server``` repository.
+
 ```
 docker build -t cybercaptor-server .
 ```
@@ -100,18 +107,17 @@ docker build -t cybercaptor-server .
 If you want to run the server in foreground, launch the following command:
 
 ```
-docker run --rm --name cybercaptor-server -p 8000:8080 fiwarecybercaptor/cybercaptor-server
+docker run --rm --name cybercaptor-server -p 8080:8080 -p 8000:8000 fiwarecybercaptor/cybercaptor-server
 ```
 
 If you want to run the server in background, launch the following command:
 
 ```
-docker run -d --name cybercaptor-server -p 8000:8080 fiwarecybercaptor/cybercaptor-server
+docker run -d --name cybercaptor-server -p 8080:8080 -p 8000:8000 fiwarecybercaptor/cybercaptor-server
 ```
 
-Then, the application can be accessed at http://localhost:8000/cybercaptor-server/.
-
-More details about building and/or running the Docker container can be found in [container/README.md](container/README.md)
+Then, the application can be accessed at http://localhost:8080/cybercaptor-server/.
+The web interface can be accessed at http://localhost:8000/
 
 ### Test
 
