@@ -17,7 +17,7 @@ RUN echo "nameserver 10.222.148.2" > /etc/resolv.conf
 RUN echo "Acquire::http::proxy \"http://apt.theresis.org:3142\";" >> /etc/apt/apt.conf
 
 # Use baseimage-docker's init system.
-CMD ["/sbin/my_init"]
+CMD ["/data/build/cybercaptor-server/start.sh"]
 
 # Install dependencies to build XSB, build MulVAL, build the .war, install python dependencies
 ENV DEBIAN_FRONTEND noninteractive
@@ -102,5 +102,6 @@ ADD container/tomcat7.sh /etc/service/tomcat7/run
 RUN chmod a+x /etc/service/tomcat7/run
 
 EXPOSE 8080
+EXPOSE 8000
 
 WORKDIR /root/.remediation
