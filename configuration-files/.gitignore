@@ -1,7 +1,6 @@
 *.P
 *.CSV
 *.txt
-*.xml
 old
 *.nessus
 *.xwam
