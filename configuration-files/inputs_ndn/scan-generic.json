@@ -1,0 +1,121 @@
+{
+	"date" : "2016-10-18 15:27:00",
+	"hosts" : [
+		{
+			"name" : "client",
+			"firstIP" : "10.0.1.1",
+			"services" : [
+				{
+					"serviceName" : "Docker",
+					"serviceVersion" : "1.6.0",
+					"serviceProto" : "TCP",
+					"servicePort" : 443,
+					"vulnerabilities" : [
+						{
+							"name" : "CVE-2015-3627"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "host1",
+			"firstIP" : "192.168.1.1",
+			"services" : [
+				{
+					"serviceName" : "kvm",
+					"serviceVersion" : "vulnerableVersion",
+					"serviceProto" : "none",
+					"servicePort" : 0,
+					"vulnerabilities" :[
+						{
+							"name" : "CVE-2011-4622"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "host2",
+			"firstIP" : "192.168.1.2",
+			"services" : [
+				{
+					"serviceName" : "kvm",
+					"serviceVersion" : "vulnerableVersion",
+					"serviceProto" : "none",
+					"servicePort" : 0,
+					"vulnerabilities" : [
+						{
+							"name" : "CVE-2011-4622"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "server",
+			"firstIP" : "10.0.4.2",
+			"services" : [
+				{
+					"serviceName" : "apache2",
+					"serviceVersion" : "2.0.43",
+					"serviceProto" : "TCP",
+					"servicePort" : 80,
+					"vulnerabilities" : [
+						{
+							"name" : "CVE-2013-2249"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "ndn_router1",
+			"services" : [
+				{
+					"serviceName" : "NFD",
+					"serviceVersion" : "1.0",
+					"serviceProto" : "NDN",
+					"serviceFace" : [101, 102, 103],
+					"vulnerabilities" : [
+						{
+							"name" : "CVE-NDN-0001"
+						}
+					]
+				}
+			]
+		},
+		{
+                        "name" : "ndn_router2",
+                        "services" : [
+                                {
+                                        "serviceName" : "NFD",
+                                        "serviceVersion" : "1.0",
+                                        "serviceProto" : "NDN",
+                                        "serviceFace" : [201, 204],
+                                        "vulnerabilities" : [
+                                                {
+                                                        "name" : "CVE-NDN-0002"
+                                                }
+                                        ]
+                                }
+                        ]
+                },
+		{
+                        "name" : "ndn_router4",
+                        "services" : [
+                                {
+                                        "serviceName" : "NFD",
+                                        "serviceVersion" : "1.0",
+                                        "serviceProto" : "NDN",
+                                        "serviceFace" : [402, 403, 405,	406],
+                                        "vulnerabilities" : [
+                                                {
+                                                        "name" : "CVE-NDN-0003"
+                                                }
+                                        ]
+                                }
+                        ]
+                }
+	]
+}

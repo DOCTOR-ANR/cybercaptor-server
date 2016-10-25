@@ -1,0 +1,7 @@
+Hostname;ifName;ifAddr;connectedToInternet;metric
+client;eth0;10.0.1.1;False;1
+igw;eth0;10.0.1.2;False;1
+egw;eth1;10.0.3.1;False;1
+firewall;eth0;10.0.3.2;False;1
+firewall;eth1;10.0.4.1;False;1
+server;eth0;10.0.4.2;False;1
