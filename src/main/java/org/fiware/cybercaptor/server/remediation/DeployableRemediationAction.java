@@ -116,6 +116,26 @@ public class DeployableRemediationAction {
 
                 }
                 break;
+            
+            case MOVE_VM:
+	            {
+	            	typeElement.setText("move-vm");
+	            	
+	            	Element moveVmElement = new Element("new-hypervisor");
+	            	actionElement.addContent(moveVmElement);
+	            	moveVmElement.setText("unknown");
+	            	break;
+	            }
+            
+            case MOVE_VM_DOMAIN:
+	            {
+	            	typeElement.setText("move-vm-domain");
+	            	
+	            	Element moveVmElement = new Element("new-domain");
+	            	actionElement.addContent(moveVmElement);
+	            	moveVmElement.setText("unknown");
+	            	break;
+	            }	
 
             default:
                 typeElement.setText("no-remediation");

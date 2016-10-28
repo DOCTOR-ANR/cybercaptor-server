@@ -231,7 +231,7 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                 if (vertex.fact != null && vertex.fact.datalogCommand != null
                         && vertex.fact.datalogCommand.command != null) {
                     String command = vertex.fact.datalogCommand.command;
-                    if (command.equals("vulExists") || command.equals("hacl") || command.equals("haclprimit") || command.toLowerCase().contains("vlan") || command.contains("attackerLocated"))
+                    if (command.equals("vulExists") || command.equals("hacl") || command.equals("haclprimit") || command.toLowerCase().contains("vlan") || command.contains("attackerLocated") || command.contains("vmOnHost") || command.contains("vmInDomain"))
                         result.add(vertex);
                 }
             } else {
@@ -833,6 +833,29 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                     result.add(blockAttackerOnAllPath);
                     break;
                 }
+                case "vmOnHost":
+                {
+                	List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
+                    RemediationAction rem = new RemediationAction(ActionType.MOVE_VM, costParametersFolder);
+                    rem.setRelatedVertex(leaf);
+                    rem.getRemediationParameters().add(command.params[0]);  // the VM
+                    rem.getRemediationParameters().add(command.params[1]);  // hypervisor to remove the VM from
+                    moveVM.add(rem);
+                    result.add(moveVM);
+                	break;
+                }
+                	
+                case "vmInDomain":
+                {
+                	List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
+                    RemediationAction rem = new RemediationAction(ActionType.MOVE_VM_DOMAIN, costParametersFolder);
+                    rem.setRelatedVertex(leaf);
+                    rem.getRemediationParameters().add(command.params[0]);  // the machine
+                    rem.getRemediationParameters().add(command.params[1]);  // domain to remove the machine from
+                    moveVM.add(rem);
+                    result.add(moveVM);
+                	break;
+                }
             }
         }
         return result;
@@ -866,7 +889,9 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                     throw new Exception("Problem while going up to the hacl for the leaf " + leaf.id);
                 }
             } else {
-                throw new Exception("Problem while going up to the hacl for the leaf " + leaf.id);
+                //throw new Exception("Problem while going up to the hacl for the leaf " + leaf.id);
+            	// there is no network rule between hosts (e.g. the vulnerability is exploitable through hypervisor)
+            	return new ArrayList<List<InformationSystemHost>>();
             }
         } else {
             throw new Exception("The leaf a no child");

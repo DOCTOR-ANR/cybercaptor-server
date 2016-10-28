@@ -216,6 +216,17 @@ public class InformationSystemManagement {
                             simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).correctVulnerabilities(correctedVulnerabilities);
                         }
                         break;
+                    case MOVE_VM:
+                        {
+                            simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).setPhysicalHost(null);
+                            break;
+                        }
+                    case MOVE_VM_DOMAIN:
+                    	{
+                    		List<Object> toremove = action.getRemediationAction().getRemediationParameters();
+                    		simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).getControllers().remove(toremove.get(1));
+                    		break;
+                    	}
                     default:
                         break;
                 }

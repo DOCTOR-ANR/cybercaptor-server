@@ -52,6 +52,16 @@ public class OperationalCostParameters {
      * The file name of the patch parameters.
      */
     public final static String FILE_NAME_PATCH = "patch.xml";
+    
+    /**
+     * The file name of the move_vm parameters.
+     */
+    public final static String FILE_NAME_VM = "move-vm.xml";
+    
+    /**
+     * The file name of the move_vm_domain parameters.
+     */
+    public final static String FILE_NAME_DOMAIN = "move-vm-domain.xml";
 
     /**
      * The average cost of the remediation

@@ -86,6 +86,16 @@ public class RemediationAction {
             if (parametersFile.exists()) {
                 getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_SNORT_RULE);
             }
+        } else if (this.getActionType() == ActionType.MOVE_VM) {
+            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_VM);
+            if (parametersFile.exists()) {
+                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_VM);
+            }
+        } else if (this.getActionType() == ActionType.MOVE_VM_DOMAIN) {
+            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_DOMAIN);
+            if (parametersFile.exists()) {
+                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_DOMAIN);
+            }
         }
     }
 
@@ -278,7 +288,13 @@ public class RemediationAction {
         TRAIN_USER, /**
          * Deploying a firewall rule
          */
-        DEPLOY_FIREWALL_RULE
+        DEPLOY_FIREWALL_RULE, /**
+         * Move a VM
+         */
+        MOVE_VM, /**
+         * Move a VM to another domain
+         */
+        MOVE_VM_DOMAIN
     }
 
 

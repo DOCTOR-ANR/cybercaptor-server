@@ -232,6 +232,84 @@ public class RestJsonConfiguration {
     public Response setPatchRuleCostParameters(@Context HttpServletRequest request, String jsonString) {
         return saveAndBuildResponseForOperationalCostParameters(request, OperationalCostParameters.FILE_NAME_PATCH, jsonString);
     }
+    
+    /**
+     * Get the operational cost parameters for a "move vm" rule.
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response
+     */
+    @GET
+    @Path("/remediation-cost-parameters/move-vm")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMoveVMCostParameters(@Context HttpServletRequest request) {
+        return buildResponseForOperationalCostParameters(request, OperationalCostParameters.FILE_NAME_VM);
+    }
+
+    /**
+     * OPTIONS necessary for operational cost parameters
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response (empty OK)
+     */
+    @OPTIONS
+    @Path("/remediation-cost-parameters/move-vm")
+    public Response setMoveVMCostParameters(@Context HttpServletRequest request) {
+        return RestApplication.returnJsonObject(request, new JSONObject());
+    }
+
+    /**
+     * Set the operational cost parameters for a "move vm" rule.
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response
+     */
+    @POST
+    @Path("/remediation-cost-parameters/move-vm")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setMoveVMCostParameters(@Context HttpServletRequest request, String jsonString) {
+        return saveAndBuildResponseForOperationalCostParameters(request, OperationalCostParameters.FILE_NAME_VM, jsonString);
+    }
+    
+    /**
+     * Get the operational cost parameters for "move vm domain" rule.
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response
+     */
+    @GET
+    @Path("/remediation-cost-parameters/move-vm-domain")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getMoveVMDomainCostParameters(@Context HttpServletRequest request) {
+        return buildResponseForOperationalCostParameters(request, OperationalCostParameters.FILE_NAME_DOMAIN);
+    }
+
+    /**
+     * OPTIONS necessary for operational cost parameters
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response (empty OK)
+     */
+    @OPTIONS
+    @Path("/remediation-cost-parameters/move-vm-domain")
+    public Response setMoveVMDomainCostParameters(@Context HttpServletRequest request) {
+        return RestApplication.returnJsonObject(request, new JSONObject());
+    }
+
+    /**
+     * Set the operational cost parameters for a "move vm domain" rule.
+     *
+     * @param request the HTTP Request
+     * @return the HTTP Response
+     */
+    @POST
+    @Path("/remediation-cost-parameters/move-vm-domain")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setMoveVMDomainCostParameters(@Context HttpServletRequest request, String jsonString) {
+        return saveAndBuildResponseForOperationalCostParameters(request, OperationalCostParameters.FILE_NAME_DOMAIN, jsonString);
+    }
 
     /**
      * Generic function to build the HTTP Reponse for operational cost parameters (snort rule, firewall rule, patch...)
