@@ -76,7 +76,7 @@
 					"serviceName" : "NFD",
 					"serviceVersion" : "1.0",
 					"serviceProto" : "NDN",
-					"serviceFace" : ["1toiGW", "1to2", "1to3"],
+					"servicePort" : 0,
 					"vulnerabilities" : [
 						{
 							"name" : "CVE-NDN-0001"
@@ -92,7 +92,7 @@
                                         "serviceName" : "NFD",
                                         "serviceVersion" : "1.0",
                                         "serviceProto" : "NDN",
-                                        "serviceFace" : ["2to1", "2to4"],
+                                        "servicePort" : 0,
                                         "vulnerabilities" : [
                                                 {
                                                         "name" : "CVE-NDN-0002"
@@ -108,7 +108,7 @@
                                         "serviceName" : "NFD",
                                         "serviceVersion" : "1.0",
                                         "serviceProto" : "NDN",
-                                        "serviceFace" : ["4to2", "4to3", "4to5", "4to6"],
+                                        "servicePort" : 0,
                                         "vulnerabilities" : [
                                                 {
                                                         "name" : "CVE-NDN-0003"
