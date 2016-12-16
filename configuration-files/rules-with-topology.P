@@ -273,3 +273,85 @@ interaction_rule(
 	(execCode(Vnf, User) :-
 		vnfOnPath(Vnf, Host1, Host2, Port, Software, User), execCode(Host1, _), vulExists(Vnf, Vuln, Software), vulProperty(Vuln, vnfExploit, privEscalation)),
 	rule_desc('can execute code on VNF 3 party interaction rule', 1)).
+
+/************************************/
+/*              NDN                 */
+/************************************/
+
+/* primitive predicates declaration */
+
+primitive(ndnRouterHasFace(_ndnRouter, _face)).
+primitive(faceIsLinked(_faceA, _faceB)).
+
+/* derived predicates declaration */
+
+derived(execCode(_host, _user)).
+derived(ndnRouterCompromisedSigned(_ndnRouter)).
+derived(ndnRouterCompromisedUnsigned(_ndnRouter)).
+
+/* tabling predicates */
+
+:- table ndnRouterCompromisedSigned/1.
+:- table ndnRouterCompromisedSigned/4.
+:- table ndnRouterCompromisedUnsigned/1.
+:- table ndnRouterCompromisedUnsigned/5.
+:- table execCode/5.
+
+/* interaction rules */
+
+/* Input compromised and signed -> output compromised signed (CACHE POISONING With FAKE DATA) */
+
+interaction_rule(
+        (ndnRouterCompromisedSigned(NDNRouter1) :-
+                ndnRouterHasFace(NDNRouter1, Face1),
+                ndnRouterHasFace(NDNRouter2, Face2),
+                faceIsLinked(Face1, Face2),
+                ndnRouterCompromisedSigned(NDNRouter2)),
+         rule_desc('Can transfer signed and compromised data', 1.0)).
+
+/* Input compromised and unsigned + don't check signature -> output compromised and unsigned (CACHE POISONNING With CORRUPTED DATA) */
+
+interaction_rule(
+        (ndnRouterCompromisedUnsigned(NDNRouter1) :-
+                ndnRouterHasFace(NDNRouter1, Face1),
+                ndnRouterHasFace(NDNRouter2, Face2),
+                faceIsLinked(Face1, Face2),
+                ndnRouterCompromisedUnsigned(NDNRouter2),
+                vulExists(NDNRouter1, Vuln, _, signatureExploit, cachePoisonned)),
+         rule_desc('Can transfer unsigned and compromised data', 1.0)).
+
+/* Input compromised and signed + vulnerability -> execCode (CACHE POISONNING With FAKE DATA) */
+
+interaction_rule(
+        (execCode(NDNRouter1, Root) :-
+		ndnRouterHasFace(NDNRouter1, Face1),
+                ndnRouterHasFace(NDNRouter2, Face2),
+                faceIsLinked(Face1, Face2),
+                ndnRouterCompromisedSigned(NDNRouter2)),
+                vulExists(NDNRouter1, Vuln, Software, remoteExploit, privEscalation)),
+        rule_desc('Can execute code on router', 1.0)).
+
+/* Input compromised and unsigned + vulnerability -> execCode (CACHE POISONNING With CORRUPTED DATA) */
+
+interaction_rule(
+        (execCode(NDNRouter1, Root) :-
+		ndnRouterHasFace(NDNRouter1, Face1),
+                ndnRouterHasFace(NDNRouter2, Face2),
+                faceIsLinked(Face1, Face2),
+                ndnRouterCompromisedUnsigned(NDNRouter2)),
+                vulExists(NDNRouter1, Vuln, Software, remoteExploit, privEscalation)),
+        rule_desc('Can execute code on router', 1.0)).
+
+/* execCode -> output compromised and signed (FAKE DATA) */
+
+interaction_rule(
+        (ndnRouterCompromisedSigned(NDNRouter1) :-
+                execCode(NDNRouter1, Root)),
+        rule_desc('Attacker can modify data', 1.0)).
+
+/* execCode -> output compromised and unsigned (CORRUPTED DATA) */
+
+interaction_rule(
+        (ndnRouterCompromisedUnsigned(NDNRouter1) :-
+                execCode(NDNRouter1, Root)),
+        rule_desc('Attacker can modify data', 1.0)).
