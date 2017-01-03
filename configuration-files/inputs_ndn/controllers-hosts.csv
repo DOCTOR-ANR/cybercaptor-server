@@ -1,0 +1,16 @@
+host;controller_global_name
+client;orchestrateur_global
+server;orchestrateur_global
+firewall;orchestrateur_global
+igw;orchestrateur_global
+egw;orchestrateur_global
+ndn_router1;orchestrateur_global
+ndn_router2;orchestrateur_global
+ndn_router3;orchestrateur_global
+ndn_router4;orchestrateur_global
+ndn_router5;orchestrateur_global
+ndn_router6;orchestrateur_global
+host1;orchestrateur_global
+host2;orchestrateur_global
+host3;orchestrateur_global
+host4;orchestrateur_global
