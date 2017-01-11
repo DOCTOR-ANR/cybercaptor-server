@@ -1,0 +1,6 @@
+[submodule "cybercaptor-client"]
+	path = cybercaptor-client
+	url = https://github.com/DOCTOR-ANR/cybercaptor-client
+[submodule "cyber-data-extract"]
+	path = cyber-data-extract
+	url = https://github.com/DOCTOR-ANR/cyber-data-extract
