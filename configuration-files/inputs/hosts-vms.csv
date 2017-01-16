@@ -1,7 +1,11 @@
 vm;host;software;user
 firewall1;host1;kvm;root
-firewall2;host2;kvm;root
-machine1;host1;kvm;root
-machine2;host3;kvm;root
-machine3;host3;kvm;root
-machine4;host2;kvm;root
+igw;host1;kvm;root
+ndn1;host2;kvm;root
+ndn2;host3;kvm;root
+ndn3;host2;kvm;root
+ndn4;host3;kvm;root
+ndn5;host3;kvm;root
+ndn6;host3;kvm;root
+egw;host4;kvm;root
+firewall2;host4;kvm;root

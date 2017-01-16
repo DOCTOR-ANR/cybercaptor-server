@@ -1,0 +1,10 @@
+source;face_src;dest;face_dst
+ndn1;igw;igw;r1
+ndn1;r2;ndn2;r1
+ndn1;r3;ndn3;r1
+ndn2;r4;ndn4;r2
+ndn3;r4;ndn4;r3
+ndn4;r5;ndn5;r4
+ndn4;r6;ndn6;r4
+ndn5;r6;ndn6;r5
+ndn6;egw;egw;r6

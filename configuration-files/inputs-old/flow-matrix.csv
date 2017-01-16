@@ -1,0 +1,5 @@
+source;destination;source_port;destination_port;protocol
+internet;10.0.1.2;any;443;TCP
+10.0.1.2;internet;80;any;TCP
+10.0.2.0/24;10.0.3.0/24;any;5432;TCP
+10.0.3.0/24;10.0.2.0/24;5432;any;TCP
