@@ -254,7 +254,7 @@ interaction_rule(
 	rule_desc('Can access VM filesystem through hypervisor', 1)).
 
 /* Trojan rule : to complete*/
-/*interaction_rule(*/
+/*interaction_rule*/
 /*	(execCode(Vm, root) :-*/
 /*		vmOnHost(Vm, Hypervisor, _, User), accessFile(Vm, write, _)),*/
 /*	rule_desc('Can install trojan on VM', 1)).*/
@@ -280,78 +280,149 @@ interaction_rule(
 
 /* primitive predicates declaration */
 
-primitive(ndnRouterHasFace(_ndnRouter, _face)).
+primitive(hasNDNFace(_host, _face)).
 primitive(faceIsLinked(_faceA, _faceB)).
+primitive(isNDNRouter(_host)).
+primitive(isIGWSoftware(_software)).
+primitive(ndnServiceInfo(_host, _software, _user)).
 
 /* derived predicates declaration */
 
+derived(ndnLink(_host1, _host2)).
 derived(execCode(_host, _user)).
-derived(ndnRouterCompromisedSigned(_ndnRouter)).
-derived(ndnRouterCompromisedUnsigned(_ndnRouter)).
+derived(ndnOutputCompromisedSigned(_ndnRouter)).
+derived(ndnOutputCompromisedUnsigned(_ndnRouter)).
 
 /* tabling predicates */
 
-:- table ndnRouterCompromisedSigned/1.
-:- table ndnRouterCompromisedSigned/4.
-:- table ndnRouterCompromisedUnsigned/1.
-:- table ndnRouterCompromisedUnsigned/5.
+:- table ndnLink/3.
+:- table ndnOutputCompromisedSigned/5.
+:- table ndnOutputCompromisedSigned/3.
+:- table ndnOutputCompromisedUnsigned/1.
+:- table ndnOutputCompromisedSigned/1.
+:- table ndnOutputCompromisedUnsigned/5.
 :- table execCode/5.
+:- table netAccess/5.
 
 /* interaction rules */
+
+/* NDN Link (in both directions, assuming NDN links are symetric */
+
+interaction_rule(
+        (ndnLink(Host1, Host2) :-
+                hasNDNFace(Host1, Face1),
+                hasNDNFace(Host2, Face2),
+                faceIsLinked(Face1, Face2)),
+        rule_desc('Direct NDN link exists between hosts', 1.0)).
+        
+interaction_rule(
+        (ndnLink(Host1, Host2) :-
+                hasNDNFace(Host1, Face1),
+                hasNDNFace(Host2, Face2),
+                faceIsLinked(Face2, Face1)),
+        rule_desc('Direct NDN link exists between hosts', 1.0)).
 
 /* Input compromised and signed -> output compromised signed (CACHE POISONING With FAKE DATA) */
 
 interaction_rule(
-        (ndnRouterCompromisedSigned(NDNRouter1) :-
-                ndnRouterHasFace(NDNRouter1, Face1),
-                ndnRouterHasFace(NDNRouter2, Face2),
-                faceIsLinked(Face1, Face2),
-                ndnRouterCompromisedSigned(NDNRouter2)),
-         rule_desc('Can transfer signed and compromised data', 1.0)).
+        (ndnOutputCompromisedSigned(NDNRouter1) :-
+                ndnLink(NDNRouter1, NDNRouter2),
+                isNDNRouter(NDNRouter1),
+                ndnOutputCompromisedSigned(NDNRouter2)),
+         rule_desc('NDN router transfers signed but compromised data', 1.0)).
 
 /* Input compromised and unsigned + don't check signature -> output compromised and unsigned (CACHE POISONNING With CORRUPTED DATA) */
 
 interaction_rule(
-        (ndnRouterCompromisedUnsigned(NDNRouter1) :-
-                ndnRouterHasFace(NDNRouter1, Face1),
-                ndnRouterHasFace(NDNRouter2, Face2),
-                faceIsLinked(Face1, Face2),
-                ndnRouterCompromisedUnsigned(NDNRouter2),
-                vulExists(NDNRouter1, Vuln, _, signatureExploit, cachePoisonned)),
-         rule_desc('Can transfer unsigned and compromised data', 1.0)).
+        (ndnOutputCompromisedUnsigned(NDNRouter1) :-
+                ndnLink(NDNRouter1, NDNRouter2),
+                isNDNRouter(NDNRouter1),
+                ndnOutputCompromisedUnsigned(NDNRouter2),
+                vulExists(NDNRouter1, Vuln, Software),
+                vulProperty(Vuln, signatureExploit, cachePoisonned)),
+         rule_desc('NDN router can transfer unsigned and compromised data', 1.0)).
 
 /* Input compromised and signed + vulnerability -> execCode (CACHE POISONNING With FAKE DATA) */
 
 interaction_rule(
-        (execCode(NDNRouter1, Root) :-
-		ndnRouterHasFace(NDNRouter1, Face1),
-                ndnRouterHasFace(NDNRouter2, Face2),
-                faceIsLinked(Face1, Face2),
-                ndnRouterCompromisedSigned(NDNRouter2),
-                vulExists(NDNRouter1, Vuln, Software, remoteExploit, privEscalation)),
+        (execCode(NDNRouter1, User) :-
+		        ndnLink(NDNRouter1, NDNRouter2),
+                ndnOutputCompromisedSigned(NDNRouter2),
+                ndnServiceInfo(NDNRouter1, Software, User),
+                vulExists(NDNRouter1, Vuln, Software),
+                vulProperty(Vuln, remoteExploit, privEscalation)),
         rule_desc('Can execute code on router', 1.0)).
 
 /* Input compromised and unsigned + vulnerability -> execCode (CACHE POISONNING With CORRUPTED DATA) */
 
 interaction_rule(
-        (execCode(NDNRouter1, Root) :-
-		ndnRouterHasFace(NDNRouter1, Face1),
-                ndnRouterHasFace(NDNRouter2, Face2),
-                faceIsLinked(Face1, Face2),
-                ndnRouterCompromisedUnsigned(NDNRouter2),
-                vulExists(NDNRouter1, Vuln, Software, remoteExploit, privEscalation)),
+        (execCode(NDNRouter1, User) :-
+		        ndnLink(NDNRouter1, NDNRouter2),
+                ndnOutputCompromisedUnsigned(NDNRouter2),
+                ndnServiceInfo(NDNRouter1, Software, User),
+                vulExists(NDNRouter1, Vuln, Software),
+                vulProperty(Vuln, remoteExploit, privEscalation)),
         rule_desc('Can execute code on router', 1.0)).
 
 /* execCode -> output compromised and signed (FAKE DATA) */
 
 interaction_rule(
-        (ndnRouterCompromisedSigned(NDNRouter1) :-
-                execCode(NDNRouter1, Root)),
-        rule_desc('Attacker can modify data', 1.0)).
+        (ndnOutputCompromisedSigned(Host) :-
+                execCode(Host, User)),
+        rule_desc('Attacker can modify data sent by host or router', 1.0)).
 
 /* execCode -> output compromised and unsigned (CORRUPTED DATA) */
 
 interaction_rule(
-        (ndnRouterCompromisedUnsigned(NDNRouter1) :-
-                execCode(NDNRouter1, Root)),
-        rule_desc('Attacker can modify data', 1.0)).
+        (ndnOutputCompromisedUnsigned(Host) :-
+                execCode(Host, User)),
+        rule_desc('Attacker can modify data sent by host or router', 1.0)).
+
+/* malicious packets crossing the IGW in the direction IP -> NDN */ 
+interaction_rule(
+        (ndnOutputCompromisedSigned(Host) :-
+                hasIP(Host, IP),
+                netAccess(IP, Protocol, Port),
+                networkServiceInfo(IP, Software, Protocol, Port, _),
+                isIGWSoftware(Software)),
+        rule_desc('Attacker can cross IGW from IP to NDN domain', 1.0)).
+
+/* malicious packets crossing the IGW in the direction IP -> NDN */ 
+interaction_rule(
+        (ndnOutputCompromisedUnsigned(Host) :-
+                hasIP(Host, IP),
+                netAccess(IP, Protocol, Port),
+                networkServiceInfo(IP, Software, Protocol, Port, _),
+                isIGWSoftware(Software)),
+        rule_desc('Attacker can cross IGW from IP to NDN domain', 1.0)).
+                
+/* malicious packets crossing the EGW in the direction NDN -> IP */
+interaction_rule(
+        (netAccess(IP, Protocol, Port) :-
+                hasIP(Host, IPGW),
+                hacl(IPGW, IP, Protocol, Port),
+                ndnServiceInfo(Host, Software, _),
+                ndnLink(Host, Host2),
+                ndnOutputCompromisedSigned(Host2)),
+        rule_desc('Attacker can cross EGW from NDN to IP domain', 1.0)).
+        
+/* malicious packets crossing the EGW in the direction NDN -> IP */
+interaction_rule(
+        (netAccess(IP, Protocol, Port) :-
+                hasIP(Host, IPGW),
+                hacl(IPGW, IP, Protocol, Port),
+                ndnServiceInfo(Host, Software, _),
+                ndnLink(Host, Host2),
+                ndnOutputCompromisedUnsigned(Host2)),
+        rule_desc('Attacker can cross EGW from NDN to IP domain', 1.0)).
+
+
+       
+interaction_rule(
+  (execCode(H, 'user') :-
+	vulExists(H, _, Software, remoteExploit, privEscalation),
+	hasIP(H,IP),
+	networkServiceInfo(IP, Software, Protocol, Port, 'user'),
+	netAccess(IP, Protocol, Port)),
+  rule_desc('remote exploit of a server program',
+  1.0)).
