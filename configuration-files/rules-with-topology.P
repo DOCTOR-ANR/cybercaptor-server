@@ -416,13 +416,29 @@ interaction_rule(
                 ndnOutputCompromisedUnsigned(Host2)),
         rule_desc('Attacker can cross EGW from NDN to IP domain', 1.0)).
 
-
-       
+/* routers replying to interest from another face (signed version) */
 interaction_rule(
-  (execCode(H, 'user') :-
-	vulExists(H, _, Software, remoteExploit, privEscalation),
-	hasIP(H,IP),
-	networkServiceInfo(IP, Software, Protocol, Port, 'user'),
-	netAccess(IP, Protocol, Port)),
-  rule_desc('remote exploit of a server program',
-  1.0)).
+        (ndnOutputCompromisedSigned(Host) :-
+                ndnLink(Host, Host2),
+                ndnLink(Host, Host3),
+                Host2 \== Host3,
+                execCode(Host3, _)),
+                isNDNRouter(Host),
+                vulExists(Host, Vuln, Software),
+                vulProperty(Vuln, badReplyExploit, cachePoisonned)),
+        rule_desc('Attacker can send replies to interests issued to another interface', 1.0)).
+        
+/* routers replying to interest from another face (unsigned version) */
+interaction_rule(
+        (ndnOutputCompromisedUnsigned(Host) :-
+                ndnLink(Host, Host2),
+                ndnLink(Host, Host3),
+                Host2 \== Host3,
+                execCode(Host3, _)),
+                isNDNRouter(Host),
+                vulExists(Host, Vuln, Software),
+                vulProperty(Vuln, badReplyExploit, cachePoisonned)),
+        rule_desc('Attacker can send replies to interests issued to another interface', 1.0)).
+        
+/* IFA : Problem : IFA does not permit to corrupt data or propagate attack */
+
