@@ -91,15 +91,15 @@ public class InformationSystemManagement {
             }
             Logger.getAnonymousLogger().log(Level.INFO, "Genering MulVAL inputs");
             informationSystem.exportToMulvalDatalogFile(mulvalInputFile.getAbsolutePath());
-
+            
             Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
             ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
-
+            
             if (ProjectProperties.getProperty("mulval-rules-path") != null) {
                 processBuilder.command().add("-r");
                 processBuilder.command().add(ProjectProperties.getProperty("mulval-rules-path"));
             }
-
+            
             processBuilder.directory(new File(outputFolderPath));
             processBuilder.environment().put("MULVALROOT", mulvalPath);
             String path = System.getenv("PATH");
@@ -263,6 +263,7 @@ public class InformationSystemManagement {
             String topologyPath = ProjectProperties.getProperty("topology-path");
             String vmPlacementPath = ProjectProperties.getProperty("placement-path");
             String controllersPath = ProjectProperties.getProperty("controllers-path");
+            String ndnTopoPath = ProjectProperties.getProperty("ndn-topology-path");
 
 
             File mulvalInputFile = new File(mulvalInputPath);
@@ -297,6 +298,12 @@ public class InformationSystemManagement {
             if  (openvasScanPath != null && openvasScanPath != "") {
             	processBuilder.command().add("--openvas-scan");
             	processBuilder.command().add(openvasScanPath);
+            }
+            
+            /* this one is completely optional, specific to NDN support */
+            if  (ndnTopoPath != null && ndnTopoPath != "") {
+            	processBuilder.command().add("--ndn-topology-file");
+            	processBuilder.command().add(ndnTopoPath);
             }
             
             

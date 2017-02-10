@@ -443,7 +443,7 @@ public class FirewallRule implements Cloneable {
      * IP protocols (TCP, UDP, ICMP) or all protocols (ANY)
      */
     public enum Protocol {
-        TCP, UDP, ANY, ICMP;
+        TCP, UDP, ANY, ICMP, NDN;
 
         public static Protocol getProtocolFromString(String protocol) {
             if (protocol.toLowerCase().equals("tcp")) {
@@ -454,6 +454,8 @@ public class FirewallRule implements Cloneable {
                 return Protocol.TCP;
             } else if (protocol.toLowerCase().equals("icmp")) {
                 return Protocol.ICMP;
+            } else if (protocol.toLowerCase().equals("ndn")) {
+                return Protocol.NDN;
             } else {
                 return Protocol.ANY;
             }
@@ -475,6 +477,8 @@ public class FirewallRule implements Cloneable {
         			return new String("ICMP");
         		case ANY :
         			return new String("ANY");
+        		case NDN :
+        			return new String("NDN");
         	}
         	return new String("ANY");
         }

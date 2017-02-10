@@ -26,6 +26,9 @@ import org.fiware.cybercaptor.server.database.Database;
 import org.fiware.cybercaptor.server.flowmatrix.FlowMatrix;
 import org.fiware.cybercaptor.server.flowmatrix.FlowMatrixElement;
 import org.fiware.cybercaptor.server.flowmatrix.FlowMatrixLine;
+import org.fiware.cybercaptor.server.topology.NDNFace;
+import org.fiware.cybercaptor.server.topology.NDNLink;
+import org.fiware.cybercaptor.server.topology.NDNTopology;
 import org.fiware.cybercaptor.server.topology.Topology;
 import org.fiware.cybercaptor.server.topology.asset.Host;
 import org.fiware.cybercaptor.server.topology.asset.IPAddress;
@@ -71,6 +74,11 @@ public class InformationSystem implements Cloneable {
      * The flow matrix of the Information System
      */
     private FlowMatrix flowMatrix;
+    
+    /**
+     * The NDN topology : list of NDN links
+     */
+    private NDNTopology ndnTopology;
 
     /**
      * The list of machines that are mastered by the attacker
@@ -119,6 +127,11 @@ public class InformationSystem implements Cloneable {
             InformationSystemHost informationSystemHost = (InformationSystemHost) host;
             fichier.println("attackerLocated('" + host.getName() + "').");
             fichier.println("attackGoal(execCode('" + host.getName() + "', _)).");
+            
+            if (host.getNDNFaces().size() > 0)
+            {
+            	fichier.println("isNDNRouter('" + host.getName() + "').");
+            }
             PhysicalHostInformation physicalHost = host.getPhysicalHost();
             if  (physicalHost != null)
             {
@@ -129,31 +142,44 @@ public class InformationSystem implements Cloneable {
             {
             	fichier.println("vmInDomain('" + host.getName() + "','" + controller + "').");
             }
-            for (Interface networkInterface : host.getInterfaces().values()) {
+            for (Interface networkInterface : host.getInterfaces().values())
+            {
                 fichier.println("hasIP('" + host.getName() + "','" + networkInterface.getAddress().toString() + "').");
                 if (networkInterface.getVlan() != null && !networkInterface.getVlan().getName().isEmpty()) {
                     fichier.println("isInVlan('" + networkInterface.getAddress().toString() + "','" + networkInterface.getVlan().getName() + "').");
                 }
             }
             fichier.println("hostAllowAccessToAllIP('" + host.getName() + "').");
-            for (Service service : informationSystemHost.getServices().values()) {
-                fichier.println("installed('" + host.getName() + "','" + service.getName() + "').");
-                if (service.getPortNumber() != 0)
-                {
-                    fichier.println("networkServiceInfo('" + service.getIpAddress() + "', '" + service.getName() + "', '" + service.getProtocol().toString() + "', " + service.getPortNumber() + ", 'user').");
-                }
-                else
+            for (NDNFace ndnface : host.getNDNFaces())
+            {
+            	fichier.println("hasNDNFace('" + host.getName() + "','" + host.getName() + "_" + ndnface.getName() + "').");
+            }
+            
+            for (Service service : informationSystemHost.getServices().values())
+            {
+                //fichier.println("installed('" + host.getName() + "','" + service.getName() + "').");
+                String proto = service.getProtocol().toString().toLowerCase();
+                if (service.getPortNumber() == 0 && !proto.equals("ndn"))
                 {
                 	String globalName = service.getGlobalName();
                 	if  (globalName == null) globalName = host.getName(); 
                 	fichier.println("localServiceInfo('" + globalName + "', '" + host.getName() + "', '" + service.getName() + "', '" + "user" + "').");
                 }
+                else if (service.getPortNumber() != 0 && !proto.equals("ndn"))
+                {
+                	fichier.println("networkServiceInfo('" + service.getIpAddress() + "', '" + service.getName() + "', '" + service.getProtocol().toString() + "', " + service.getPortNumber() + ", 'user').");
+                }
+                else
+                {
+                	fichier.println("ndnServiceInfo('" + host.getName() + "', '" + service.getName() + "', '" + "user" + "').");
+                }
 
                 for (String cve : service.getVulnerabilities().keySet()) {
                     Vulnerability vulnerability = service.getVulnerabilities().get(cve);
                     fichier.println("vulProperty('" + vulnerability.cve + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
-                    fichier.println("vulExists('" + host.getName() + "', '" + vulnerability.cve + "', '" + service.getName() + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
-                    if (vulnerability.cvss != null && vulnerability.cvss.getScore() >= 6.6) {
+                    fichier.println("vulExists('" + host.getName() + "', '" + vulnerability.cve + "', '" + service.getName() + "').");
+                    //fichier.println("vulExists('" + host.getName() + "', '" + vulnerability.cve + "', '" + service.getName() + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
+                    /*if (vulnerability.cvss != null && vulnerability.cvss.getScore() >= 6.6) {
                         fichier.println("cvss('" + vulnerability.cve + "',h).");
                     } else if (vulnerability.cvss != null && vulnerability.cvss.getScore() >= 3.3) {
                         fichier.println("cvss('" + vulnerability.cve + "',m).");
@@ -161,9 +187,10 @@ public class InformationSystem implements Cloneable {
                         fichier.println("cvss('" + vulnerability.cve + "',l).");
                     } else {
                         fichier.println("cvss('" + vulnerability.cve + "',m).");
-                    }
+                    }*/
                 }
             }
+            
             fichier.println();
 
         }
@@ -278,6 +305,17 @@ public class InformationSystem implements Cloneable {
                 }
             }
         }
+        
+        // add NDN links
+        if (!this.ndnTopology.isEmpty())
+        {
+        	fichier.println("\n\n/****\n *** NDN links\n ***/");
+        	for (NDNLink link : this.ndnTopology.getLinks())
+        	{
+        		fichier.println("faceIsLinked('" + link.getSource().getHost().getName() + "_" + link.getSource().getName() + "', '" + link.getDestination().getHost().getName() + "_" + link.getDestination().getName() + "').");
+        	}
+        }
+        
 
         fichier.println("/**********************************/");
         fichier.println("/******     General Rules    ******/");
@@ -447,15 +485,15 @@ public class InformationSystem implements Cloneable {
      */
     public Element toDomXMLElement() throws Exception {
         Element root = new Element("topology");
-
+        
         //machines
         for (int i = 0; i < this.topology.getHosts().size(); i++) {
             InformationSystemHost machine = (InformationSystemHost) this.topology.getHosts().get(i);
             root.addContent(machine.toDomXMLElement());
         }
-        
         root.addContent(this.flowMatrix.toDomXMLElement());
-
+        if  (!this.ndnTopology.isEmpty()) root.addContent(this.ndnTopology.toDomXMLElement());
+        
         return root;
     }
 
@@ -475,6 +513,7 @@ public class InformationSystem implements Cloneable {
             this.topology.getHosts().add(host);
         }
         this.flowMatrix = new FlowMatrix(domElement.getChild("flow-matrix"), this.topology);
+        this.ndnTopology = new NDNTopology(domElement.getChild("ndn-links"), this.topology);
     }
 
 

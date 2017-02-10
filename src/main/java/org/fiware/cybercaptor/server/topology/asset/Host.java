@@ -23,6 +23,7 @@ package org.fiware.cybercaptor.server.topology.asset;
 
 
 import org.fiware.cybercaptor.server.informationsystem.PhysicalHostInformation;
+import org.fiware.cybercaptor.server.topology.NDNFace;
 import org.fiware.cybercaptor.server.topology.Topology;
 import org.fiware.cybercaptor.server.topology.asset.component.*;
 
@@ -78,6 +79,11 @@ public class Host implements Cloneable {
      */
     
     private List<String> controllers = new ArrayList<String>();
+    
+    /**
+     * The NDN faces
+     */
+    private List<NDNFace> ndnFaces = new ArrayList<NDNFace>();
 
     /**
      * Create an empty host
@@ -658,5 +664,21 @@ public class Host implements Cloneable {
     public void addController(String c)
     {
     	controllers.add(c);
+    }
+    
+    /**
+     * @param f
+     */
+    public void addNDNFace(NDNFace f)
+    {
+    	ndnFaces.add(f);
+    }
+    
+    /**
+     * @return the NDN faces
+     */
+    public List<NDNFace> getNDNFaces()
+    {
+    	return ndnFaces;
     }
 }

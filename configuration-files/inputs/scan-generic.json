@@ -91,7 +91,7 @@
 					"serviceProto" : "NDN",
 					"vulnerabilities" : [
 						{
-							"name" : "CVE-NDN-0002"
+							"name" : "NDN-2017-0002"
 						}
 					]
 				}
@@ -106,7 +106,7 @@
                     "serviceProto" : "NDN",
                     "vulnerabilities" : [
                         {
-                            "name" : "CVE-NDN-0002"
+                            "name" : "NDN-2017-0002"
                         }
                     ]
                 }
@@ -121,7 +121,7 @@
 					"serviceProto" : "NDN",
 					"vulnerabilities" : [
 						{
-							"name" : "CVE-NDN-0001"
+							"name" : "NDN-2017-0001"
 						}
 					]
 				}
@@ -136,7 +136,7 @@
 					"serviceProto" : "NDN",
 					"vulnerabilities" : [
 						{
-							"name" : "CVE-NDN-0001"
+							"name" : "NDN-2017-0001"
 						}
 					]
 				}
@@ -163,7 +163,7 @@
 					"serviceProto" : "NDN",
 					"vulnerabilities" : [
 						{
-							"name" : "CVE-NDN-0002"
+							"name" : "NDN-2017-0002"
 						}
 					]
 				}

@@ -162,9 +162,9 @@ public class RestJsonAPI {
         Logger.getAnonymousLogger().log(Level.INFO, "Loading topology " + topologyFilePath);
 
         InformationSystem informationSystem = InformationSystemManagement.loadTopologyXMLFile(topologyFilePath, database);
-
+        
         AttackGraph attackGraph = InformationSystemManagement.prepareInputsAndExecuteMulVal(informationSystem);
-
+        
         if (attackGraph == null)
             return RestApplication.returnErrorMessage(request, "the attack graph is empty");
         Logger.getAnonymousLogger().log(Level.INFO, "Launch scoring function");
@@ -244,6 +244,7 @@ public class RestJsonAPI {
         }
         catch (Exception e)
         {
+        	e.printStackTrace();
         	return RestApplication.returnErrorMessage(request, e.getMessage());
         }
     }
