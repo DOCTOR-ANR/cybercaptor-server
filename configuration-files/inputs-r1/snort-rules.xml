@@ -1,0 +1,18 @@
+<operational_cost_parameters>
+    <businessApplicationsTestsDuration>0</businessApplicationsTestsDuration>
+    <workCost>0</workCost>
+    <remediationCost>0</remediationCost>
+    <computationPowerCost>0</computationPowerCost>
+    <storageCost>0</storageCost>
+    <deploymentDuration>0</deploymentDuration>
+    <remediationUninstallDuration>0</remediationUninstallDuration>
+    <serviceUnavailabilityDeploymentDuration>0</serviceUnavailabilityDeploymentDuration>
+    <restartCost>0</restartCost>
+    <restartDuration>0</restartDuration>
+    <usedPower>0</usedPower>
+    <usedStorage>0</usedStorage>
+    <maintenanceDuration>0</maintenanceDuration>
+    <skillRateTests>1</skillRateTests>
+    <skillRateDeployment>1</skillRateDeployment>
+    <skillRateMaintenance>1</skillRateMaintenance>
+</operational_cost_parameters>

@@ -20,6 +20,11 @@
  ****************************************************************************************/
 package org.fiware.cybercaptor.server.scoring.math;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.fiware.cybercaptor.server.scoring.types.Arc;
 import org.fiware.cybercaptor.server.scoring.types.Graph;
 import org.fiware.cybercaptor.server.scoring.types.Vertex;
@@ -30,6 +35,10 @@ import org.fiware.cybercaptor.server.scoring.types.Vertex;
  * @author K. M.
  */
 public class AttackPaths {
+	
+	static long mergeTime;
+	static long e2InitTime;
+	static long nbcalls;
 
     /**
      * Test if an element is in the set
@@ -76,9 +85,16 @@ public class AttackPaths {
 
         if (Targets != null) {
             Graph[] GraphTable = new Graph[Targets.length];
-            for (int i = 0; i < Targets.length; i++) {
+            mergeTime = 0;
+            e2InitTime = 0;
+            for (int i = 0; i < Targets.length; i++)
+            {
+            	nbcalls = 0;
                 GraphTable[i] = exploreAttackPath2(Targets[i], null, AttackGraph);
+                System.out.println("explored path " + i + " (" + nbcalls + " calls, target = '" + Targets[i].getFact() + "')");
             }
+            System.out.println("Merge time : " + mergeTime + "ms");
+            System.out.println("Init time : " + e2InitTime + "ms");
             return GraphTable;
         } else {
             return null;
@@ -106,13 +122,13 @@ public class AttackPaths {
      * Explore the attack path from node V
      *
      * @param V          the starting node
-     * @param Forbidden  the list of forbidden vertices
+     * @param ForbiddenIDs  the list of IDs of forbidden vertices
      * @param graph      the attack graph
      * @param AttackPath the attack path to build
      * @return the attack path
      * @deprecated use {@link org.fiware.cybercaptor.server.scoring.math.AttackPaths#exploreAttackPath2(org.fiware.cybercaptor.server.scoring.types.Vertex, org.fiware.cybercaptor.server.scoring.types.Vertex[], org.fiware.cybercaptor.server.scoring.types.Graph)}
      */
-    @Deprecated
+  /*  @Deprecated
     public static Graph exploreAttackPath(Vertex V, Vertex[] Forbidden, Graph graph, Graph AttackPath) {
         Vertex[] vertices = new Vertex[graph.getVertices().length];
         Arc[] arcs = new Arc[graph.getArcs().length];
@@ -159,24 +175,27 @@ public class AttackPaths {
             }
         }
         return AttackPath;
-    }
+    }*/
 
     /**
      * Explore the attack path from node V
      *
      * @param V         the starting vertex
-     * @param Forbidden the list of forbidden vertices
+     * @param ForbiddenIDs the list of forbidden vertices IDs
      * @param graph     the attack graph
      * @return the created attack path
      */
-    public static Graph exploreAttackPath2(Vertex V, Vertex[] Forbidden, Graph graph) {
+    public static Graph exploreAttackPath2(Vertex V, Set<Double> ForbiddenIDs, Graph graph)
+    {
+    	double e2StartTime = System.nanoTime();
+    	nbcalls++;
+    	if (ForbiddenIDs == null) ForbiddenIDs = new HashSet<Double>();
         Vertex[] vertices = new Vertex[graph.getVertices().length];
         Arc[] arcs = new Arc[graph.getArcs().length];
         Vertex LEAFVertex = new Vertex(0.0, "", 0.0, "LEAF");
         Vertex ORVertex = new Vertex(0.0, "", 0.0, "OR");
         Vertex ANDVertex = new Vertex(0.0, "", 0.0, "AND");
         Graph Result = null;
-
         for (int m = 0; m < vertices.length; m++) {
             vertices[m] = new Vertex(graph.getVertices()[m]);
         }
@@ -184,67 +203,23 @@ public class AttackPaths {
             arcs[m] = new Arc(graph.getArcs()[m].getSource(), graph.getArcs()[m].getDestination());
         }
         Vertex[] V_Predecessors = Graph.getPredecessors(arcs, vertices, V.getID());
-        if (V.getType().equals(ORVertex.getType()) && Forbidden == null) {
-            Vertex ForbiddenVertex = new Vertex(V);
-            Forbidden = new Vertex[1];
-            Forbidden[0] = ForbiddenVertex;
-        }
-        if (V.getType().equals(ANDVertex.getType())) {
-            if (V_Predecessors != null) {
-                Graph[] Buffers = new Graph[V_Predecessors.length];
-                for (int i = 0; i < V_Predecessors.length; i++) {
-                    Vertex D = V_Predecessors[i];
-                    if (D != null) {
-                        if (D.getType().equals(LEAFVertex.getType())) {
-                            Buffers[i] = createAtomicGraph(V, D);
-                        } else if (D.getType().equals(ORVertex.getType())) {
-                            if (checkForbiddenVertex(D, Forbidden) == 1) {
-                                if (Forbidden == null) {
-                                    Forbidden = new Vertex[1];
-                                    Forbidden[0] = new Vertex(D);
-                                } else {
-                                    Vertex[] BufferForbidden = new Vertex[Forbidden.length + 1];
-                                    System.arraycopy(Forbidden, 0, BufferForbidden, 0, Forbidden.length);
-                                    BufferForbidden[BufferForbidden.length - 1] = D;
-                                    Forbidden = BufferForbidden;
-                                }
-                                Graph BufferGraph = createAtomicGraph(V, D);
-                                Graph parentRes = exploreAttackPath2(D, Forbidden, graph);
-
-                                //One parent of the AND is missing -> Delete the whole branch
-                                if (parentRes == null) {
-                                    return null;
-                                } else {
-                                    Buffers[i] = mergeGraphs(BufferGraph, parentRes);
-                                }
-                            } else {
-                                return null;
-                            }
-                        }
-                    }
-                }
-                for (Graph Buffer1 : Buffers) {
-                    if (Buffer1 == null) {
-                        return null;
-                    }
-                }
-                for (Graph Buffer : Buffers) {
-                    Result = mergeGraphs(Result, Buffer);
-                }
-            }
-            return Result;
-        }
-        if (V.getType().equals(ORVertex.getType())) {
-            if (V_Predecessors != null) {
+        double e2EndTime = System.nanoTime();
+        e2InitTime += (e2EndTime - e2StartTime) / 1000000;
+        if (V.getType().equals(ORVertex.getType()))
+        {
+        	ForbiddenIDs.add(V.getID());
+        	if (V_Predecessors != null)
+        	{
                 Graph Buffer = null;
                 boolean atLeastOnePath = false;
-                for (Vertex D : V_Predecessors) {
+                for (Vertex D : V_Predecessors)
+                {
                     if (D != null) {
                         if (D.getType().equals(LEAFVertex.getType())) {
                             Buffer = mergeGraphs(Buffer, createAtomicGraph(V, D));
                             atLeastOnePath = true;
                         } else if (D.getType().equals(ANDVertex.getType())) {
-                            Graph TempBuffer = exploreAttackPath2(D, Forbidden, graph);
+                            Graph TempBuffer = exploreAttackPath2(D, ForbiddenIDs, graph);
                             if (TempBuffer != null) {
                                 Buffer = mergeGraphs(Buffer, mergeGraphs(createAtomicGraph(V, D), TempBuffer));
                                 atLeastOnePath = true;
@@ -252,11 +227,52 @@ public class AttackPaths {
                         }
                     }
                 }
-                if (!atLeastOnePath) {
-                    return null;
-                } else
-                    return Buffer;
+                if (atLeastOnePath)
+                {
+                	return Buffer;
+                }
+                else return null;
             }
+        }
+        
+        if (V.getType().equals(ANDVertex.getType()))
+        {
+            if (V_Predecessors != null) {
+                Graph[] Buffers = new Graph[V_Predecessors.length];
+                for (int i = 0; i < V_Predecessors.length; i++) {
+                    Vertex D = V_Predecessors[i];
+                    if (D != null) {
+                        if (D.getType().equals(LEAFVertex.getType())) {
+                            Buffers[i] = createAtomicGraph(V, D);
+                        } else if (D.getType().equals(ORVertex.getType()))
+                        {
+                            if (!ForbiddenIDs.contains(D.getID()))
+                            {
+                                ForbiddenIDs.add(D.getID());
+                                Graph BufferGraph = createAtomicGraph(V, D);
+                                Graph parentRes = exploreAttackPath2(D, ForbiddenIDs, graph);
+
+                                //One parent of the AND is missing -> Delete the whole branch
+                                if (parentRes == null) return null;
+                                else Buffers[i] = mergeGraphs(BufferGraph, parentRes);
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        }
+                    }
+                }
+                for (Graph Buffer1 : Buffers)
+                {
+                    if (Buffer1 == null) return null;
+                }
+                for (Graph Buffer : Buffers)
+                {
+                    Result = mergeGraphs(Result, Buffer);
+                }
+            }
+            return Result;
         }
         return null;
     }
@@ -265,15 +281,20 @@ public class AttackPaths {
      * Merge two graphs in a new graph
      *
      * @param successor   the first graph
-     * @param predecessor the secon graph
+     * @param predecessor the second graph
      * @return the merged graph
      */
     public static Graph mergeGraphs(Graph successor, Graph predecessor) {
+    	long startTime = System.nanoTime();
         Graph result;
         if (successor == null) {
+        	long endTime = System.nanoTime();
+        	mergeTime += (endTime - startTime) / 1000000;
             return predecessor;
         }
         if (predecessor == null) {
+        	long endTime = System.nanoTime();
+        	mergeTime += (endTime - startTime) / 1000000;
             return successor;
         }
         Arc[] ArcsBuffer = new Arc[successor.getArcs().length];
@@ -301,6 +322,8 @@ public class AttackPaths {
             }
         }
         result = new Graph(ArcsBuffer, VertexBuffer);
+        long endTime = System.nanoTime();
+    	mergeTime += (endTime - startTime) / 1000000;
         return result;
     }
 
@@ -327,7 +350,7 @@ public class AttackPaths {
      * @param V2 the list of forbidden vertices
      * @return 0 if forbidden vertex is found, else return 1
      */
-    public static int checkForbiddenVertex(Vertex[] V1, Vertex[] V2) {
+   /* public static int checkForbiddenVertex(List<Vertex> V1, List<Vertex> V2) {
         int result = 1;
         if (V1 != null && V2 != null) {
             for (Vertex aV1 : V1) {
@@ -339,7 +362,7 @@ public class AttackPaths {
             }
         }
         return result;
-    }
+    }*/
 
     /**
      * Check if a forbidden vertex V1 is found in V2
@@ -348,7 +371,8 @@ public class AttackPaths {
      * @param V2 the list of forbidden vertices
      * @return 0 if forbidden vertex is found, else return 1
      */
-    public static int checkForbiddenVertex(Vertex V1, Vertex[] V2) {
+   /* public static int checkForbiddenVertex(Vertex V1, Set<Vertex> V2)
+    {
         int result = 1;
         if (V1 != null && V2 != null) {
             for (Vertex aV2 : V2) {
@@ -358,5 +382,5 @@ public class AttackPaths {
             }
         }
         return result;
-    }
+    }*/
 }

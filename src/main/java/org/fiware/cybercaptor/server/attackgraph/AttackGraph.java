@@ -612,7 +612,6 @@ public class AttackGraph implements Cloneable {
         System.out.println("Compute global score and compute attack paths");
         this.globalScore = Launch.main(vertexIDTable, vertexFactTable, vertexMulvalMetricTable, vertexTypeTable,
                 arcSrcTable, arcDstTable, impactMetrics, outputPath, previousMaxScore);
-
         return AttackPath.loadAttackPathsFromFile(outputPath, this);
     }
 

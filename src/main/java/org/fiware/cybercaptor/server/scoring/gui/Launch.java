@@ -82,8 +82,11 @@ public class Launch {
         Vertex[] TargetSet = Graph.getVerticesOnTypeAndFact(VerticesTable, "OR");
 
         System.out.println("Generate Attack Paths");
+        long startTime = System.nanoTime();
         Graph[] result = AttackPaths.main(TargetSet, graph); //Disabled following the test launch of attack path algorithm.
-
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1000000;
+        System.out.println("Attack path genertion time : " + duration + " ms");
         double scoreAttackGraph = formulas.MinMax(formulas.globalScore(graph), previousMaxScore);
 
         saveToXmlFile(pathToAttackPathsFile, result);

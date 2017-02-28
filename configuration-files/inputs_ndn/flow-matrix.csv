@@ -1,3 +1,0 @@
-source;destination;source_port;destination_port;protocol
-10.0.3.0/24;10.0.4.0/24;4545;4646;HTTP
-10.0.4.0/24;10.0.3.0/24;4646;4545;HTTP

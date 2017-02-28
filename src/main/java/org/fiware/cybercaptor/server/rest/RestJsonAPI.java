@@ -169,9 +169,9 @@ public class RestJsonAPI {
             return RestApplication.returnErrorMessage(request, "the attack graph is empty");
         Logger.getAnonymousLogger().log(Level.INFO, "Launch scoring function");
         attackGraph.loadMetricsFromTopology(informationSystem);
-
+        
         List<AttackPath> attackPaths = AttackPathManagement.scoreAttackPaths(attackGraph, attackGraph.getNumberOfVertices());
-
+        
         //Delete attack paths that have less than 3 hosts (attacker that pown its own host).
         List<AttackPath> attackPathToKeep = new ArrayList<AttackPath>();
         for (AttackPath attackPath : attackPaths) {
