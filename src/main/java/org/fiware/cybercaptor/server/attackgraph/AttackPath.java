@@ -60,6 +60,11 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * The goal of the attacker
      */
     Vertex goal = null;
+    
+    /**
+     * The target of this attack path (MulVAL fact)
+     */
+    public String targetString = null;
 
     /**
      * @param leavesToCorrect      the list of leaves that should be corrected
@@ -969,6 +974,12 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
         if (scoringElement != null) {
             this.scoring = Double.parseDouble(scoringElement.getText());
         }
+        
+        Element targetElement = root.getChild("target");
+        if (targetElement != null)
+        {
+        	this.targetString = targetElement.getText();
+        }
 
 		/* Add all the arcs */
         Element arcs_element = root.getChild("arcs");
@@ -1011,6 +1022,9 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
         Element scoringElement = new Element("scoring");
         scoringElement.setText(this.scoring + "");
         root.addContent(scoringElement);
+        Element targetElement = new Element("target");
+        targetElement.setText(this.targetString);
+        root.addContent(targetElement);
         //arcs
         Element arcsElement = new Element("arcs");
         root.addContent(arcsElement);

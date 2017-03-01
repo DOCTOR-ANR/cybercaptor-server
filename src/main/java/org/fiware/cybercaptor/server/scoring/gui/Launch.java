@@ -89,7 +89,7 @@ public class Launch {
         System.out.println("Attack path genertion time : " + duration + " ms");
         double scoreAttackGraph = formulas.MinMax(formulas.globalScore(graph), previousMaxScore);
 
-        saveToXmlFile(pathToAttackPathsFile, result);
+        saveToXmlFile(pathToAttackPathsFile, result, TargetSet);
         Logger.getAnonymousLogger().log(Level.INFO, "Attack paths generated");
         return scoreAttackGraph;
     }
@@ -101,14 +101,20 @@ public class Launch {
      * @param AttackPaths list of attack paths
      * @throws Exception
      */
-    protected static void saveToXmlFile(String filePath, Graph[] AttackPaths) throws Exception {
+    protected static void saveToXmlFile(String filePath, Graph[] AttackPaths, Vertex[] Targets) throws Exception
+    {
         XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
         Element MainRoot = new Element("attack_paths");
         Element root;
         if (AttackPaths != null) {
-            for (Graph AttackPathBuffer : AttackPaths) {
+        	int i = 0;
+            for (Graph AttackPathBuffer : AttackPaths)
+            {
                 Arc[] AttackPathArcs = AttackPathBuffer.getArcs();
                 root = new Element("attack_path");
+                Element targetElement = new Element("target");
+                targetElement.setText(Targets[i].getFact());
+                root.addContent(targetElement);
                 Element scoringElement = new Element("scoring");
                 scoringElement.setText(String.valueOf(formulas.MinMax(formulas.globalScore(AttackPathBuffer), AttackPathBuffer.getVertices().length)));
                 root.addContent(scoringElement);
@@ -127,6 +133,7 @@ public class Launch {
                     root.addContent(arcsElement);
                     MainRoot.addContent(root);
                 }
+                i++;
             }
         }
         output.output(MainRoot, new FileOutputStream(filePath));
