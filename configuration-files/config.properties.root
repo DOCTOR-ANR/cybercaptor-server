@@ -19,4 +19,4 @@ mulval-input=/root/.remediation/configuration-files/tmp/mulval-input-generated.P
 topology-path=/root/.remediation/configuration-files/tmp/topology-generated.xml
 remediations-history-path=/root/.remediation/configuration-files/tmp/remediations-history.bin
 alerts-temporary-path=/root/.remediation/configuration-files/inputs-r1/tmp/alerts-temp.bin
-ndn-topology-path=/root/.remediation/configuration-files/inputs-r1/ndn-topo.csv
+#ndn-topology-path=/root/.remediation/configuration-files/inputs-r1/ndn-topo.csv
