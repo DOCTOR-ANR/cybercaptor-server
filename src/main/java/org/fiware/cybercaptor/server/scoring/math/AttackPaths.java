@@ -207,20 +207,26 @@ public class AttackPaths {
         e2InitTime += (e2EndTime - e2StartTime) / 1000000;
         if (V.getType().equals(ORVertex.getType()))
         {
-        	ForbiddenIDs.add(V.getID());
         	if (V_Predecessors != null)
         	{
                 Graph Buffer = null;
                 boolean atLeastOnePath = false;
                 for (Vertex D : V_Predecessors)
                 {
-                    if (D != null) {
-                        if (D.getType().equals(LEAFVertex.getType())) {
+                    if (D != null)
+                    {
+                        if (D.getType().equals(LEAFVertex.getType()))
+                        {
                             Buffer = mergeGraphs(Buffer, createAtomicGraph(V, D));
                             atLeastOnePath = true;
-                        } else if (D.getType().equals(ANDVertex.getType())) {
+                        }
+                        else if (D.getType().equals(ANDVertex.getType()))
+                        {
+                        	ForbiddenIDs.add(V.getID());
                             Graph TempBuffer = exploreAttackPath2(D, ForbiddenIDs, graph);
-                            if (TempBuffer != null) {
+                            ForbiddenIDs.remove(V.getID());
+                            if (TempBuffer != null)
+                            {
                                 Buffer = mergeGraphs(Buffer, mergeGraphs(createAtomicGraph(V, D), TempBuffer));
                                 atLeastOnePath = true;
                             }
@@ -237,20 +243,25 @@ public class AttackPaths {
         
         if (V.getType().equals(ANDVertex.getType()))
         {
-            if (V_Predecessors != null) {
+            if (V_Predecessors != null)
+            {
                 Graph[] Buffers = new Graph[V_Predecessors.length];
-                for (int i = 0; i < V_Predecessors.length; i++) {
+                for (int i = 0; i < V_Predecessors.length; i++)
+                {
                     Vertex D = V_Predecessors[i];
                     if (D != null) {
-                        if (D.getType().equals(LEAFVertex.getType())) {
+                        if (D.getType().equals(LEAFVertex.getType()))
+                        {
                             Buffers[i] = createAtomicGraph(V, D);
-                        } else if (D.getType().equals(ORVertex.getType()))
+                        }
+                        else if (D.getType().equals(ORVertex.getType()))
                         {
                             if (!ForbiddenIDs.contains(D.getID()))
                             {
                                 ForbiddenIDs.add(D.getID());
                                 Graph BufferGraph = createAtomicGraph(V, D);
                                 Graph parentRes = exploreAttackPath2(D, ForbiddenIDs, graph);
+                                ForbiddenIDs.remove(V.getID());
 
                                 //One parent of the AND is missing -> Delete the whole branch
                                 if (parentRes == null) return null;
