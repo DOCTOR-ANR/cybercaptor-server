@@ -134,12 +134,12 @@ interaction_rule(
 
 
 
-interaction_rule((vulExists(H, ID, Sw, Range, Consequence):-
+/*interaction_rule((vulExists(H, ID, Sw, Range, Consequence):-
 	        vulExists(H, ID, Sw),
 		vulProperty(ID, Range, Consequence)),
              rule_desc('',
              1)).
-
+*/
 
 
 interaction_rule(
