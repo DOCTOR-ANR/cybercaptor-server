@@ -22,6 +22,7 @@
 package org.fiware.cybercaptor.server.topology;
 
 
+import org.fiware.cybercaptor.server.informationsystem.PhysicalHostInformation;
 import org.fiware.cybercaptor.server.topology.asset.Host;
 import org.fiware.cybercaptor.server.topology.asset.IPAddress;
 import org.fiware.cybercaptor.server.topology.asset.Network;
@@ -31,9 +32,11 @@ import org.fiware.cybercaptor.server.topology.asset.component.Interface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 
 /**
@@ -244,6 +247,21 @@ public class Topology implements Cloneable {
         this.addHost(newHost);
         return newHost;
     }
+    
+    /**
+     * Gets host by name
+     * 
+     * @param name the name to look for
+     * @return The corresponding host, null if not found
+     */
+    public Host getHostByName(String name)
+    {
+    	for (Host h : hosts)
+    	{
+    		if  (h.getName().equals(name)) return h;
+    	}
+    	return null;
+    }
 
     /**
      * Gets interface by ip address.
@@ -440,6 +458,30 @@ public class Topology implements Cloneable {
             }
         }
         return result;
+    }
+    
+    /**
+     * Get the hypervisors (== the hosts with at least 1 VM running on them)
+     * @return the list of hypervisors of the topology
+     */
+    public List<Host> getHypervisors()
+    {
+    	Set<Host> hypSet = new HashSet<Host>();
+    	for (Host h : hosts)
+    	{
+    		PhysicalHostInformation phi = h.getPhysicalHost();
+    		if  (phi != null)
+    		{
+    			Host hypervisor = this.getHostByName(phi.getHost());
+    			if  (hypervisor != null && !hypSet.contains(hypervisor)) hypSet.add(hypervisor);
+    		}
+    	}
+    	List<Host> result = new ArrayList<Host>();
+    	for (Host h : hypSet)
+    	{
+    		result.add(h);
+    	}
+    	return result;
     }
 
 }

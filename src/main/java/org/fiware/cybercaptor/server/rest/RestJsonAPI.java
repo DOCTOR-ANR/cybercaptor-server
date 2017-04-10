@@ -62,6 +62,9 @@ import java.util.logging.Logger;
  */
 @Path("/json/")
 public class RestJsonAPI {
+	
+	static Monitoring global_monitoring = null;
+	static Database global_db = null;
 
     /**
      * Generates the attack graph and initializes the main objects for other API calls
@@ -111,9 +114,9 @@ public class RestJsonAPI {
         monitoring.setAttackPathList(attackPaths);
         monitoring.setInformationSystem(informationSystem);
         monitoring.setAttackGraph((MulvalAttackGraph) attackGraph);
-
-        request.getSession(true).setAttribute("database", database);
-        request.getSession(true).setAttribute("monitoring", monitoring);
+        
+        global_monitoring = monitoring;
+        global_db = database;
 
         return RestApplication.returnJsonObject(request, new JSONObject().put("status", "Loaded"));
     }
@@ -186,9 +189,9 @@ public class RestJsonAPI {
         monitoring.setAttackPathList(attackPaths);
         monitoring.setInformationSystem(informationSystem);
         monitoring.setAttackGraph((MulvalAttackGraph) attackGraph);
-
-        request.getSession(true).setAttribute("database", database);
-        request.getSession(true).setAttribute("monitoring", monitoring);
+        
+        global_monitoring = monitoring;
+        global_db = database;
 
         return RestApplication.returnJsonObject(request, new JSONObject().put("status", "Loaded"));
     }
@@ -232,7 +235,7 @@ public class RestJsonAPI {
     @Path("/topology")
     @Produces(MediaType.APPLICATION_XML)
     public Response getTopology(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+        Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return Response.ok("The monitoring object is empty. Did you forget to " +
@@ -259,7 +262,7 @@ public class RestJsonAPI {
     @Path("host/list")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getHostList(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+        Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -285,7 +288,7 @@ public class RestJsonAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response setHostList(@Context HttpServletRequest request, String jsonString) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -312,7 +315,7 @@ public class RestJsonAPI {
     @Path("attack_path/list")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getList(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -335,7 +338,7 @@ public class RestJsonAPI {
     @Path("attack_path/number")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getNumber(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -356,7 +359,7 @@ public class RestJsonAPI {
     @Path("attack_path/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAttackPath(@Context HttpServletRequest request, @PathParam("id") int id) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -388,7 +391,7 @@ public class RestJsonAPI {
     @Path("attack_path/{id}/topological")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getTopologicalAttackPath(@Context HttpServletRequest request, @PathParam("id") int id) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -417,8 +420,8 @@ public class RestJsonAPI {
     @Path("attack_path/{id}/remediations")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAttackPathRemediations(@Context HttpServletRequest request, @PathParam("id") int id) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
-        Database db = ((Database) request.getSession(true).getAttribute("database"));
+    	Monitoring monitoring = global_monitoring;
+    	Database db = global_db;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -456,8 +459,8 @@ public class RestJsonAPI {
     @Path("attack_path/{id}/remediation/{id-remediation}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response simulateRemediationInAttackGraph(@Context HttpServletRequest request, @PathParam("id") int id, @PathParam("id-remediation") int id_remediation) throws Exception {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
-        Database db = ((Database) request.getSession(true).getAttribute("database"));
+    	Monitoring monitoring = global_monitoring;
+    	Database db = global_db;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -522,8 +525,8 @@ public class RestJsonAPI {
     @Path("attack_path/{id}/remediation/{id-remediation}/validate")
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateRemediationInAttackGraph(@Context HttpServletRequest request, @PathParam("id") int id, @PathParam("id-remediation") int id_remediation) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
-        Database db = ((Database) request.getSession(true).getAttribute("database"));
+    	Monitoring monitoring = global_monitoring;
+    	Database db = global_db;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -579,7 +582,7 @@ public class RestJsonAPI {
     @Path("attack_graph")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAttackGraph(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -601,7 +604,7 @@ public class RestJsonAPI {
     @Path("attack_graph/score")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAttackGraphScore(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -621,7 +624,7 @@ public class RestJsonAPI {
     @Path("attack_graph/topological")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getTopologicalAttackGraph(@Context HttpServletRequest request) {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -689,7 +692,7 @@ public class RestJsonAPI {
     @Path("/idmef/alerts")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAlerts(@Context HttpServletRequest request) throws IOException, ClassNotFoundException {
-        Monitoring monitoring = ((Monitoring) request.getSession(true).getAttribute("monitoring"));
+    	Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
