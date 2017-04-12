@@ -1,0 +1,8 @@
+Hostname;ifName;ifAddr;connectedToInternet;metric
+host1;eth0;192.168.1.1;False;1
+host2;eth0;192.168.1.2;False;1
+vm1;eth0;10.0.1.1;False;1
+vm2;eth0;10.0.1.2;False;1
+vm3;eth0;10.0.1.3;False;1
+vm4;eth0;10.0.1.4;False;1
+vm5;eth0;10.0.1.5;False;1

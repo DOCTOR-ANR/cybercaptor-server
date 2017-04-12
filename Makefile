@@ -13,3 +13,22 @@ install:
 	chmod -R o+rw ./configuration-files/
 	chown -R tomcat7:tomcat7 /usr/share/tomcat7/
 
+ndn:
+	touch configuration-files/inputs/aaa
+	rm -v configuration-files/inputs/*
+	cp -v configuration-files/inputs-ndn/* configuration-files/inputs/
+
+r1:
+	touch configuration-files/inputs/aaa
+	rm -v configuration-files/inputs/*
+	cp -v configuration-files/inputs-r1/* configuration-files/inputs/
+
+r2:
+	touch configuration-files/inputs/aaa
+	rm -v configuration-files/inputs/*
+	cp -v configuration-files/inputs-r2/* configuration-files/inputs/
+
+remediation:
+	touch configuration-files/inputs/aaa
+	rm -v configuration-files/inputs/*
+	cp -v configuration-files/inputs-remediation/* configuration-files/inputs/

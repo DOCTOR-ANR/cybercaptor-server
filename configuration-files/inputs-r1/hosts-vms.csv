@@ -2,6 +2,7 @@ vm;host;software;user
 firewall1;host1;kvm;root
 firewall2;host2;kvm;root
 machine1;host1;kvm;root
-machine2;host3;kvm;root
-machine3;host3;kvm;root
+machine2;host2;kvm;root
+machine3;host2;kvm;root
 machine4;host2;kvm;root
+machine5;host3;kvm;root

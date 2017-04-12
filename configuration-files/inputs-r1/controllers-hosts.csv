@@ -1,9 +1,6 @@
 host;controller_global_name
-machine1;orchestrateur_global
-machine2;orchestrateur_global
-machine3;orchestrateur_global
-firewall1;orchestrateur_global
-firewall2;orchestrateur_global
-host1;orchestrateur_global
-host2;orchestrateur_global
-host3;orchestrateur_global
+machine1;orchestrator1
+machine2;orchestrator2
+machine3;orchestrator2
+firewall1;orchestrator1
+firewall2;orchestrator1

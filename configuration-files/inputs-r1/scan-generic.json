@@ -3,7 +3,6 @@
 	"hosts" : [
 		{
 			"name" : "machine1",
-			"firstIP" : "10.0.1.2",
 			"services" : [
 				{
 					"serviceName" : "apache2",
@@ -20,7 +19,6 @@
 		},
 		{
 			"name" : "machine2",
-			"firstIP" : "10.0.3.2",
 			"services" : [
 				{
 					"serviceName" : "postgreSQL",
@@ -37,7 +35,6 @@
 		},
 		{
 			"name" : "machine3",
-			"firstIP" : "10.0.4.2",
 			"services" : [
 				{
 					"serviceName" : "apache2",
@@ -54,22 +51,35 @@
 		},
 		{
 			"name" : "machine4",
-			"firstIP" : "10.0.5.1",
 			"services": [
 				{
 					"serviceName" : "orchestratord",
 					"serviceVersion" : "unknown",
 					"serviceProto" : "none",
 					"servicePort" : 0,
-					"global_name" : "orchestrateur_global",
+					"global_name" : "orchestrator1",
 					"vulnerabilities" : [
 					]
 				}
 			]
 		},
 		{
+                        "name" : "machine5",
+                        "services": [
+                                {
+                                        "serviceName" : "orchestratord",
+                                        "serviceVersion" : "unknown",
+                                        "serviceProto" : "none",
+                                        "servicePort" : 0,
+                                        "global_name" : "orchestrator2",
+                                        "vulnerabilities" : [
+                                        ]
+                                }
+                        ]
+                },
+
+		{
 			"name" : "host1",
-			"firstIP" : "192.168.1.1",
 			"services" : [
 				{
 					"serviceName" : "kvm",
@@ -83,7 +93,6 @@
 		},
 		{
 			"name" : "host2",
-			"firstIP" : "192.168.1.2",
 			"services" : [
 				{
 					"serviceName" : "kvm",
@@ -100,7 +109,6 @@
 		},
 		{
 			"name" : "host3",
-			"firstIP" : "192.168.1.3",
 			"services" : [
 				{
 					"serviceName" : "kvm",
@@ -108,9 +116,6 @@
 					"serviceProto" : "none",
 					"servicePort" : 0,
 					"vulnerabilities" : [
-						{
-							"name" : "CVE-2011-4622"
-						}
 					]
 				}
 			]
