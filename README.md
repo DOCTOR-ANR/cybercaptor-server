@@ -99,6 +99,7 @@ For more details, read the documentation [Installation and administration Manual
 Building the container requires to have cloned the ```cybercaptor-client``` and ```cyber-data-extract``` repositories at the root of the ```cybercaptor-server``` repository.
 
 ```
+cd container
 docker build -t cybercaptor-server .
 ```
 
