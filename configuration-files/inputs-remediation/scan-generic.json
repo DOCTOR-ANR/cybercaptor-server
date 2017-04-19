@@ -2,7 +2,7 @@
 	"date" : "2016-08-09 11:02:00",
 	"hosts" : [
 		{
-			"name" : "vm1",
+			"name" : "machine1",
 			"services" : [
 				{
 					"serviceName" : "apache2",
@@ -10,18 +10,37 @@
 					"serviceProto" : "TCP",
 					"servicePort" : 443,
 					"vulnerabilities" : [
+						{
+							"name" : "CVE-2013-2249"
+						}
 					]
 				}
 			]
 		},
 		{
-			"name" : "vm2",
+			"name" : "machine2",
+			"services" : [
+				{
+					"serviceName" : "postgreSQL",
+					"serviceVersion" :"42",
+					"serviceProto" : "TCP",
+					"servicePort" : 5432,
+					"vulnerabilities" : [
+						{
+							"name" : "CVE-2013-1903"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "machine3",
 			"services" : [
 				{
 					"serviceName" : "apache2",
-					"serviceVersion" :"42",
+					"serviceVersion" : "unknown",
 					"serviceProto" : "TCP",
-					"servicePort" : 443,
+					"servicePort" : 80,
 					"vulnerabilities" : [
 						{
 							"name" : "CVE-2011-3192"
@@ -31,18 +50,34 @@
 			]
 		},
 		{
-			"name" : "vm3",
-			"services" : [
+			"name" : "machine4",
+			"services": [
 				{
-					"serviceName" : "apache2",
+					"serviceName" : "orchestratord",
 					"serviceVersion" : "unknown",
-					"serviceProto" : "TCP",
-					"servicePort" : 80,
+					"serviceProto" : "none",
+					"servicePort" : 0,
+					"global_name" : "orchestrator1",
 					"vulnerabilities" : [
 					]
 				}
 			]
 		},
+		{
+                        "name" : "machine5",
+                        "services": [
+                                {
+                                        "serviceName" : "orchestratord",
+                                        "serviceVersion" : "unknown",
+                                        "serviceProto" : "none",
+                                        "servicePort" : 0,
+                                        "global_name" : "orchestrator2",
+                                        "vulnerabilities" : [
+                                        ]
+                                }
+                        ]
+                },
+
 		{
 			"name" : "host1",
 			"services" : [
@@ -52,9 +87,6 @@
 					"serviceProto" : "none",
 					"servicePort" : 0,
 					"vulnerabilities" :[
-						{
-                                                        "name" : "CVE-2011-4622"
-                                                }
 					]
 				}
 			]
@@ -69,9 +101,21 @@
 					"servicePort" : 0,
 					"vulnerabilities" : [
 						{
-                                                        "name" : "CVE-2011-4622"
-                                                }
-
+							"name" : "CVE-2011-4622"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name" : "host3",
+			"services" : [
+				{
+					"serviceName" : "kvm",
+					"serviceVersion" : "vulnerableVersion",
+					"serviceProto" : "none",
+					"servicePort" : 0,
+					"vulnerabilities" : [
 					]
 				}
 			]
