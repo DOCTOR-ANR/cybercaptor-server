@@ -37,7 +37,7 @@ NOTE : This repository was adapted to fit the needs of the DOCTOR and 5G-ENSURE 
 - Apache Maven 2
 - Python 2
 - [XSB](http://xsb.sourceforge.net/)
-- [MulVAL](http://www.arguslab.org/mulval.html)
+- [MulVAL modified version](https://github.com/fiware-cybercaptor/mulval)
 
 ### Build
 
