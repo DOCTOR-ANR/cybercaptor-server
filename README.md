@@ -87,7 +87,7 @@ vim ./configuration-files/config.properties
 
 ```
 
-For more details, read the documentation [Installation And adminsitration Manual](./doc/InstallationAndAdministrationManual.md).
+For more details, read the documentation [Installation and administration Manual](./doc/InstallationAndAdministrationManual.md).
 
 ## Docker Version Deployment
 
@@ -103,6 +103,7 @@ git submodule update
 
 2) Build the container
 ```
+cd container
 docker build -t cybercaptor-server .
 ```
 
@@ -129,7 +130,7 @@ Go on URL : http://localhost:8080/cybercaptor-server/rest/json/initialize
 
 If the result is ```{"status":"Loaded"}```, the application has been properly built and installed.
 
-For more details, read the documentation [Installation And adminsitration Manual](./doc/InstallationAndAdministrationManual.md).
+For more details, read the documentation [Installation and administration Manual](./doc/InstallationAndAdministrationManual.md).
 
 ## Debugging
 
