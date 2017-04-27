@@ -86,6 +86,7 @@ public class AttackPathManagement {
         List<AttackPath> attackPaths = monitoring.getAttackPathList();
 
         if (id >= 0 && id < attackPaths.size()) {
+        	attackPaths.get(id).id = id;
             return attackPaths.get(id).toDomXMLElement();
         }
         return null;
