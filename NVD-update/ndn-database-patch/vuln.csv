@@ -1,0 +1,5 @@
+id;cve;description;cvss_id
+78635;NDN-2017-0001;The NDN router doesn't verify input data signature.;78635
+78636;NDN-2017-0002;The NDN router does not check incoming face of DATA packets.;78636
+78637;NDN-2017-0003;The NDN router does not check signature of received route announcements.;78637
+78638;NDN-2017-0004;Cache overflow allows remote code execution.;78638

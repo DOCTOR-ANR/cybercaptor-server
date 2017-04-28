@@ -1,0 +1,4 @@
+944;Improper verification of data signature;The software does not properly verify the input data signature.;Base
+945;No verification of packet origin.;The software does not check incoming face of data packets.;Base
+946;No verification of route origin.;The software does not check route announcement signature.;Base
+947;Out-of-bound write;Cache line written outside bounds;Base
