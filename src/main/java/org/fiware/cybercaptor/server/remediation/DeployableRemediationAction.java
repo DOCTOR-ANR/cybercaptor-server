@@ -121,9 +121,12 @@ public class DeployableRemediationAction {
 	            {
 	            	typeElement.setText("move-vm");
 	            	
-	            	Element moveVmElement = new Element("new-hypervisor");
+	            	Element moveVmElement = new Element("vm-to-move");
 	            	actionElement.addContent(moveVmElement);
-	            	moveVmElement.setText("unknown");
+	            	moveVmElement.setText((String)getRemediationAction().getRemediationParameters().get(0));
+	            	Element oldHypervisorElement = new Element("current-vm-hypervisor");
+	            	actionElement.addContent(oldHypervisorElement);
+	            	oldHypervisorElement.setText((String)getRemediationAction().getRemediationParameters().get(1));
 	            	break;
 	            }
             
