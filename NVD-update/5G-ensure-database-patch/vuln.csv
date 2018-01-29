@@ -1,0 +1,2 @@
+id;cve;description;cvss_id
+78639;PULSAR-2017-0001;A malevolent VNF can send faulse config notifications “Notify Config Change” on Ve-Vnfm-vnf interface to the VNF Manager. As a consequence, the VNF can take control of the VNF Manager.;78639

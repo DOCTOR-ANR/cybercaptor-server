@@ -94,6 +94,12 @@ public class Host implements Cloneable {
     }
 
     /**
+     * The name of VNF Manager id
+     */
+    private String vnfManagerId = null;
+
+
+    /**
      * Create a host with its name
      *
      * @param name the name
@@ -681,4 +687,21 @@ public class Host implements Cloneable {
     {
     	return ndnFaces;
     }
+
+    /**
+     * @return the NDN faces
+     */
+    public String getVnfManagerId()
+    {
+        return vnfManagerId;
+    }
+
+    /**
+     * @param vnfmid
+     */
+    public void setVnfManagerId(String vnfmid)
+    {
+    	vnfManagerId = vnfmid;
+    }
+
 }

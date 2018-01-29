@@ -241,9 +241,18 @@ public class InformationSystemHost extends Host {
             routesElement.addContent(route.toDomXMLElement());
         }
 
-        //Firwall
+        //Firewall
         root.addContent(getInputFirewallRulesTable().toDomXMLElement());
         root.addContent(getOutputFirewallRulesTable().toDomXMLElement());
+
+        // VNF Manager ID
+        String vnfMngrId = this.getVnfManagerId();
+        if  (vnfMngrId != null )
+        {
+		Element vnfManagerIdElement = new Element("vnfmanagerid");
+		vnfManagerIdElement.setText(vnfMngrId);
+		root.addContent(vnfManagerIdElement);
+        }
 
         return root;
     }
@@ -421,6 +430,13 @@ public class InformationSystemHost extends Host {
         Element outgoingFirewallElement = domElement.getChild("output-firewall");
         if (outgoingFirewallElement != null)
             this.getOutputFirewallRulesTable().loadFromDomElement(outgoingFirewallElement);
+
+        // VNF Manager ID
+	Element vnfManagerIdElement = domElement.getChild("vnfmanagerid");
+        if  (vnfManagerIdElement != null )
+        {
+		this.setVnfManagerId(vnfManagerIdElement .getText());
+        }
     }
 
     /**

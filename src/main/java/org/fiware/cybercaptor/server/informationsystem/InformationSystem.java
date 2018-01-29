@@ -190,6 +190,12 @@ public class InformationSystem implements Cloneable {
                     }*/
                 }
             }
+            String vnfMngrId = host.getVnfManagerId();
+            if  (vnfMngrId != null)
+            {
+            	fichier.println("attackGoal(vnfManagerAttack('" + host.getName() + "' )).");
+            	fichier.println("vnfManagedBy('"+ host.getName() + "','" + vnfMngrId + "').");
+            }
             
             fichier.println();
 
