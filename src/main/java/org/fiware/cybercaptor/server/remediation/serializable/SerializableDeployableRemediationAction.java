@@ -22,8 +22,6 @@
 package org.fiware.cybercaptor.server.remediation.serializable;
 
 import org.fiware.cybercaptor.server.remediation.DeployableRemediationAction;
-import org.fiware.cybercaptor.server.remediation.Patch;
-import org.fiware.cybercaptor.server.remediation.Rule;
 
 import java.io.Serializable;
 
@@ -50,49 +48,15 @@ public class SerializableDeployableRemediationAction implements Serializable {
      */
     private final String host;
 
-
     /**
      * Create a serializable deployable remediation (action + host)
      *
-     * @param deployableRemediationAction the deployable remediation (action + host)
      */
-    public SerializableDeployableRemediationAction(DeployableRemediationAction deployableRemediationAction) {
-        remediationActionType = deployableRemediationAction.getRemediationAction().getActionType().toString();
-        StringBuilder patchStringBuilder = new StringBuilder();
-        switch (deployableRemediationAction.getRemediationAction().getActionType()) {
-            case APPLY_PATCH:
-                for (Object patchObject : deployableRemediationAction.getRemediationAction().getRemediationParameters()) {
-                    Patch patch = (Patch) patchObject;
-                    patchStringBuilder.append(patch.getLink());
-                    if (deployableRemediationAction.getRemediationAction().getRemediationParameters().iterator().hasNext()) {
-                        patchStringBuilder.append("|");
-                    }
-                }
-                remediationAction = patchStringBuilder.toString();
-                break;
-            case DEPLOY_FIREWALL_RULE:
-                remediationAction = deployableRemediationAction.getRemediationAction().getRemediationParameters().get(0).toString();
-                break;
-            case DEPLOY_SNORT_RULE:
-                patchStringBuilder = new StringBuilder();
-                for (Object ruleObject : deployableRemediationAction.getRemediationAction().getRemediationParameters()) {
-                    Rule rule = (Rule) ruleObject;
-                    patchStringBuilder.append(rule.getRule());
-                    if (deployableRemediationAction.getRemediationAction().getRemediationParameters().iterator().hasNext()) {
-                        patchStringBuilder.append("|");
-                    }
-                }
-                remediationAction = patchStringBuilder.toString();
-                break;
-            default:
-                remediationAction = "unset";
-                break;
-        }
-        if (deployableRemediationAction.getHost() != null && deployableRemediationAction.getHost().getName() != null) {
-            this.host = deployableRemediationAction.getHost().getName();
-        } else {
-            this.host = "";
-        }
+    public SerializableDeployableRemediationAction( String host, String remediationActionType, String remediationAction ) {
+
+      this.host                  = host;
+      this.remediationActionType = remediationActionType;
+      this.remediationAction     = remediationAction;
     }
 
     /**
@@ -129,13 +93,16 @@ public class SerializableDeployableRemediationAction implements Serializable {
      * @return true if the remediations are equals
      */
     public boolean equals(DeployableRemediationAction deployableRemediationAction) {
-        SerializableDeployableRemediationAction serializableDeployableRemediation = new SerializableDeployableRemediationAction(deployableRemediationAction);
-        boolean result = true;
 
-        result &= serializableDeployableRemediation.getRemediationActionType().equals(this.getRemediationActionType());
-        result &= serializableDeployableRemediation.getRemediationAction().equals(this.getRemediationAction());
-        result &= serializableDeployableRemediation.getHost().equals(this.getHost());
+      return this.equals( deployableRemediationAction.makeSerializableDeployableRemediationAction() );
+    }
 
-        return result;
+    public boolean equals( SerializableDeployableRemediationAction other ) {
+
+      return 
+          this.host.equals                 ( other.host                  ) &&
+          this.remediationActionType.equals( other.remediationActionType ) &&
+          this.remediationAction.equals    ( other.remediationAction     );
     }
 }
+

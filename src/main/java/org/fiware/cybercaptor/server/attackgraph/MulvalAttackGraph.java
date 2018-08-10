@@ -35,14 +35,7 @@ import java.util.List;
  */
 public class MulvalAttackGraph extends AttackGraph implements Cloneable {
 
-    /**
-     * The path to the xml path of the attack graph
-     */
-    public String xmlFilePath = "";
-
-    public MulvalAttackGraph() {
-
-    }
+    public MulvalAttackGraph() { }
 
     /**
      * Create an attack graph from an output xml file from Mulval
@@ -59,9 +52,9 @@ public class MulvalAttackGraph extends AttackGraph implements Cloneable {
      * @param xmlPath the path of the XML file
      * @throws Exception
      */
-    public void loadFromFile(String xmlPath) throws Exception {
-        this.xmlFilePath = xmlPath;
-        FileInputStream file = new FileInputStream(xmlPath);
+    public void loadFromFile(String xmlFilePath) throws Exception {
+
+        FileInputStream file = new FileInputStream(xmlFilePath);
 
         SAXBuilder sxb = new SAXBuilder();
         Document document = sxb.build(file);

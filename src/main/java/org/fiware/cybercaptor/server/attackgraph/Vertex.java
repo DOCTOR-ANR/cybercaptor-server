@@ -130,73 +130,37 @@ public class Vertex implements Cloneable {
      * @throws Exception
      */
     public InformationSystemHost getRelatedMachine(InformationSystem informationSystem) throws Exception {
-        if (concernedMachine != null)
-            return concernedMachine;
-        InformationSystemHost result = null;
-        if (this.fact != null) {
-            if (this.fact.type == Fact.FactType.DATALOG_FACT && this.fact.datalogCommand != null) {
-                DatalogCommand command = this.fact.datalogCommand;
-                switch (command.command) {
-                    case "vulExists":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "execCode":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "netAccess":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "canAccessHost":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "hacl":
-                        if (command.params.length >= 2) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[1]);
-                        }
-                        break;
-                    case "accessMaliciousInput":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "networkServiceInfo":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "principalCompromised":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByUserName(command.params[0]);
-                        }
-                        break;
-                    case "attackerLocated":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "accessFile":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[0]);
-                        }
-                        break;
-                    case "hasAccount":
-                        if (command.params.length >= 1) {
-                            result = informationSystem.existingMachineByNameOrIPAddress(command.params[1]);
-                        }
-                        break;
-                }
-            }
-        }
-        this.concernedMachine = result;
-        return result;
+
+        if (concernedMachine == null && fact != null && fact.type == Fact.FactType.DATALOG_FACT && fact.datalogCommand != null) {
+
+		DatalogCommand command = fact.datalogCommand;
+		int rank = -1;
+		
+		switch (command.command) {
+		    case "vulExists":
+		    case "execCode":
+		    case "netAccess":
+		    case "canAccessHost":
+		    case "accessMaliciousInput":
+		    case "networkServiceInfo":
+		    case "principalCompromised":
+		    case "attackerLocated":
+		    case "accessFile":
+		    case "ndnOutputCompromised":
+		    case "ndnTrafficIntercepted":
+			rank = 0;
+			break;
+		    case "hasAccount":
+		    case "hacl":
+			rank = 1;
+			break;
+		}
+		if ((rank > -1) && (command.params.length > rank )) {
+		    concernedMachine = informationSystem.existingMachineByNameOrIPAddress(command.params[rank]);
+		}
+	}
+
+        return concernedMachine;
     }
 
     @Override
@@ -218,6 +182,10 @@ public class Vertex implements Cloneable {
         /*return "Vertex [fact=" + fact + ", id=" + id + ", metric=" + metric
 				+ ", type=" + type + "]";*/
         return this.id + ":" + this.fact.factString;
+    }
+
+    public String toLongString() {
+        return "Vertex [fact=" + fact + ", id=" + id + ", metric=" + mulvalMetric + ", type=" + type + "]";
     }
 
     /**
@@ -260,6 +228,22 @@ public class Vertex implements Cloneable {
         }
 
         return null;
+    }
+
+    public boolean isRemediable( )
+    {
+    	if( fact != null && fact.datalogCommand != null && fact.datalogCommand.command != null )
+	{
+		if( 
+			fact.datalogCommand.command.contains("attackerLocated") || 
+			fact.datalogCommand.command.contains("isInVlan") || 
+			fact.datalogCommand.command.contains("vulProperty")
+		) {
+			return false; 
+		}
+	}
+
+	return true; 
     }
 
     /**

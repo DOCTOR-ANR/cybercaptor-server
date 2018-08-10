@@ -31,10 +31,6 @@ import org.fiware.cybercaptor.server.monitoring.Monitoring;
 import org.fiware.cybercaptor.server.properties.ProjectProperties;
 import org.fiware.cybercaptor.server.remediation.DeployableRemediation;
 import org.fiware.cybercaptor.server.remediation.DeployableRemediationAction;
-import org.fiware.cybercaptor.server.remediation.Patch;
-import org.fiware.cybercaptor.server.remediation.Rule;
-import org.fiware.cybercaptor.server.topology.asset.component.FirewallRule;
-import org.fiware.cybercaptor.server.vulnerability.Vulnerability;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -60,11 +56,18 @@ public class InformationSystemManagement {
         InformationSystem result = new InformationSystem();
         try {
             result.loadFromXMLFile(XMLInformationSystemFile, db);
-            return result;
         } catch (Exception e) {
+            result = null;
             e.printStackTrace();
         }
-        return null;
+        return result;
+    }
+
+    protected static void cleanDir(String theFolderPath ) {
+
+	File theFolder = new File( theFolderPath );
+
+	for (File f : theFolder.listFiles() ) f.delete();
     }
 
     /**
@@ -74,55 +77,62 @@ public class InformationSystemManagement {
      * @return the associated attack graph object
      */
     public static AttackGraph prepareInputsAndExecuteMulVal(InformationSystem informationSystem) {
-        if (informationSystem == null)
-            return null;
-        try {
-            //Load MulVAL properties
 
-            String mulvalPath = ProjectProperties.getProperty("mulval-path");
-            String xsbPath = ProjectProperties.getProperty("xsb-path");
-            String outputFolderPath = ProjectProperties.getProperty("output-path");
+        MulvalAttackGraph ag = null;
 
-            File mulvalInputFile = new File(ProjectProperties.getProperty("mulval-input"));
+	try {
+	    //Load MulVAL properties
 
-            File mulvalOutputFile = new File(outputFolderPath + "/.xml");
-            if (mulvalOutputFile.exists()) {
-                mulvalOutputFile.delete();
+	    String mulvalPath          = ProjectProperties.getProperty("mulval-path");
+	    String xsbPath             = ProjectProperties.getProperty("xsb-path");
+	    String outputFolderPath    = ProjectProperties.getProperty("output-path");
+	    String mulvalInputFilePath = ProjectProperties.getProperty("mulval-input");
+
+	    cleanDir( outputFolderPath );
+
+	    File mulvalInputFile  = new File(mulvalInputFilePath);
+	    //File mulvalOutputFile = new File(outputFolderPath + "/mulval-output.xml");
+	    File mulvalOutputFile = new File(outputFolderPath + "/.xml");
+
+	    if( null != informationSystem ) {
+
+		    Logger.getAnonymousLogger().log(Level.INFO, "Genering MulVAL inputs");
+		    informationSystem.exportToMulvalDatalogFile(mulvalInputFile.getAbsolutePath());
             }
-            Logger.getAnonymousLogger().log(Level.INFO, "Genering MulVAL inputs");
-            informationSystem.exportToMulvalDatalogFile(mulvalInputFile.getAbsolutePath());
-            
-            Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
-            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
-            
-            if (ProjectProperties.getProperty("mulval-rules-path") != null) {
-                processBuilder.command().add("-r");
-                processBuilder.command().add(ProjectProperties.getProperty("mulval-rules-path"));
-            }
-            
-            processBuilder.directory(new File(outputFolderPath));
-            processBuilder.environment().put("MULVALROOT", mulvalPath);
-            String path = System.getenv("PATH");
-            processBuilder.environment().put("PATH", mulvalPath + "/utils/:" + xsbPath + ":" + path);
-            Process process = processBuilder.start();
-            process.waitFor();
+	    
+	    Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
+	    ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
+	    
+	    if (ProjectProperties.getProperty("mulval-rules-path") != null) {
+		processBuilder.command().add("-r");
+		processBuilder.command().add(ProjectProperties.getProperty("mulval-rules-path"));
+	    }
+	    
+	    processBuilder.directory(new File(outputFolderPath));
+	    processBuilder.environment().put("MULVALROOT", mulvalPath);
+	    String path = System.getenv("PATH");
+	    processBuilder.environment().put("PATH", mulvalPath + "/utils/:" + xsbPath + ":" + path);
+	    Process process = processBuilder.start();
+	    process.waitFor();
 
-            if (!mulvalOutputFile.exists()) {
-                Logger.getAnonymousLogger().log(Level.INFO, "Empty attack graph!");
-                return null;
-            }
+            Logger.getAnonymousLogger().log(Level.INFO, "command :" + processBuilder.command().toString());
 
-            MulvalAttackGraph ag = new MulvalAttackGraph(mulvalOutputFile.getAbsolutePath());
+	    if (!mulvalOutputFile.exists()) {
+		Logger.getAnonymousLogger().log(Level.INFO, "Empty attack graph!");
+		return null;
+	    }
 
-            ag.loadMetricsFromTopology(informationSystem);
+	    ag = new MulvalAttackGraph(mulvalOutputFile.getAbsolutePath());
 
-            return ag;
+	    if( null != informationSystem ) {
+	    	ag.loadMetricsFromTopology(informationSystem);
+	    }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
 
-        return null;
+        return ag;
     }
 
     /**
@@ -131,51 +141,8 @@ public class InformationSystemManagement {
      * @return the associated attack graph object
      */
     public static AttackGraph generateAttackGraphWithMulValUsingAlreadyGeneratedMulVALInputFile() {
-        try {
-            //Load MulVAL properties
-
-            String mulvalPath = ProjectProperties.getProperty("mulval-path");
-            String xsbPath = ProjectProperties.getProperty("xsb-path");
-            String outputFolderPath = ProjectProperties.getProperty("output-path");
-
-            File mulvalInputFile = new File(ProjectProperties.getProperty("mulval-input"));
-
-            File mulvalOutputFile = new File(outputFolderPath + "/.xml");
-            if (mulvalOutputFile.exists()) {
-                mulvalOutputFile.delete();
-            }
-
-            Logger.getAnonymousLogger().log(Level.INFO, "Launching MulVAL");
-            ProcessBuilder processBuilder = new ProcessBuilder(mulvalPath + "/utils/graph_gen.sh", mulvalInputFile.getAbsolutePath(), "-v");
-
-            if (ProjectProperties.getProperty("mulval-rules-path") != null) {
-                processBuilder.command().add("-r");
-                processBuilder.command().add(ProjectProperties.getProperty("mulval-rules-path"));
-            }
-
-            processBuilder.directory(new File(outputFolderPath));
-            processBuilder.environment().put("MULVALROOT", mulvalPath);
-            String path = System.getenv("PATH");
-            processBuilder.environment().put("PATH", mulvalPath + "/utils/:" + xsbPath + ":" + path);
-            Process process = processBuilder.start();
-            process.waitFor();
-            
-            Logger.getAnonymousLogger().log(Level.INFO, "command :" + processBuilder.command().toString());
-
-            if (!mulvalOutputFile.exists()) {
-                Logger.getAnonymousLogger().log(Level.INFO, "Empty attack graph!");
-                return null;
-            }
-
-            MulvalAttackGraph ag = new MulvalAttackGraph(mulvalOutputFile.getAbsolutePath());
-
-            return ag;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
+	
+	return prepareInputsAndExecuteMulVal(null);
     }
 
     /**
@@ -184,52 +151,17 @@ public class InformationSystemManagement {
      * @param db                the vulnerability database
      * @return a clone of the topology, in which the remediation is applied
      */
-    public static InformationSystem simulateRemediationOnNewInforationSystem(InformationSystem informationSystem, DeployableRemediation remediation, Database db) {
+    public static InformationSystem simulateRemediationOnNewInformationSystem(InformationSystem informationSystem, DeployableRemediation remediation, Database db) {
+
         InformationSystem simulatedTopology = null;
+
         try {
             simulatedTopology = informationSystem.clone();
 
-            for (int i = 0; i < remediation.getActions().size(); i++) {
-                DeployableRemediationAction action = remediation.getActions().get(i);
-                Logger.getAnonymousLogger().log(Level.INFO, "Simulate the remediation " + action.getRemediationAction().getActionType() + " on machine " + action.getHost());
-                switch (action.getRemediationAction().getActionType()) {
-                    case APPLY_PATCH:
-                        for (int j = 0; j < action.getRemediationAction().getRemediationParameters().size(); j++) {
-                            Patch patch = (Patch) action.getRemediationAction().getRemediationParameters().get(j);
-                            List<Vulnerability> correctedVulnerabilities = patch.getCorectedVulnerabilities(db.getConn());
-                            simulatedTopology.existingMachineByNameOrIPAddress(action.getHost().getName()).correctVulnerabilities(correctedVulnerabilities);
-                        }
-                        break;
-                    case DEPLOY_FIREWALL_RULE:
-                        FirewallRule rule = (FirewallRule) action.getRemediationAction().getRemediationParameters().get(0);
-                        if (rule.getTable() == FirewallRule.Table.INPUT) {
-                            simulatedTopology.existingMachineByNameOrIPAddress(action.getHost().getName()).getInputFirewallRulesTable().getRuleList().add(0, rule);
-                        } else if (rule.getTable() == FirewallRule.Table.OUTPUT) {
-                            simulatedTopology.existingMachineByNameOrIPAddress(action.getHost().getName()).getOutputFirewallRulesTable().getRuleList().add(0, rule);
-                        }
-                        break;
-                    case DEPLOY_SNORT_RULE:
-                        for (int j = 0; j < action.getRemediationAction().getRemediationParameters().size(); j++) {
-                            Rule snortRule = (Rule) action.getRemediationAction().getRemediationParameters().get(j);
-                            List<Vulnerability> correctedVulnerabilities = snortRule.getCorectedVulnerabilities(db.getConn());
-                            //TODO: In fact, the vulnerability is not really corrected but rather suppressed on the path...
-                            simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).correctVulnerabilities(correctedVulnerabilities);
-                        }
-                        break;
-                    case MOVE_VM:
-                        {
-                            simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).setPhysicalHost(null);
-                            break;
-                        }
-                    case MOVE_VM_DOMAIN:
-                    	{
-                    		List<Object> toremove = action.getRemediationAction().getRemediationParameters();
-                    		simulatedTopology.existingMachineByNameOrIPAddress(action.getRemediationAction().getRelatedVertex().concernedMachine.getName()).getControllers().remove(toremove.get(1));
-                    		break;
-                    	}
-                    default:
-                        break;
-                }
+            for ( DeployableRemediationAction action : remediation.getActions() ) {
+
+                Logger.getAnonymousLogger().log(Level.INFO, "Simulate the remediation " + action + " on machine " + action.getHost());
+                action.applyOnInformationSystem( simulatedTopology, db );
             }
 
         } catch (Exception e) {
@@ -246,25 +178,23 @@ public class InformationSystemManagement {
      */
     public static boolean prepareMulVALInputs() {
         try {
-            //Load python script properties
+            // Load python script properties
+            final String pythonPath              = ProjectProperties.getProperty("python-path");
+            final String mulvalInputScriptFolder = ProjectProperties.getProperty("mulval-input-script-folder");
+            final String hostInterfacePath       = ProjectProperties.getProperty("host-interfaces-path");
+            final String vlansPath               = ProjectProperties.getProperty("vlans-path");
+            final String routingPath             = ProjectProperties.getProperty("routing-path");
+            final String flowMatrixPath          = ProjectProperties.getProperty("flow-matrix-path");
+            final String vulnerabilityScanPath   = ProjectProperties.getProperty("vulnerability-scan-path");
+            final String openvasScanPath         = ProjectProperties.getProperty("openvas-scan-path");
+            final String genericScanPath         = ProjectProperties.getProperty("generic-scan-path");
+            final String mulvalInputPath         = ProjectProperties.getProperty("mulval-input");
+            final String topologyPath            = ProjectProperties.getProperty("topology-path");
+            final String vmPlacementPath         = ProjectProperties.getProperty("placement-path");
+            final String controllersPath         = ProjectProperties.getProperty("controllers-path");
+            final String ndnTopoPath             = ProjectProperties.getProperty("ndn-topology-path");
 
-            String pythonPath = ProjectProperties.getProperty("python-path");
-            String mulvalInputScriptFolder = ProjectProperties.getProperty("mulval-input-script-folder");
-            String mulvalInputScriptPath = mulvalInputScriptFolder + "/main.py";
-
-            String hostInterfacePath = ProjectProperties.getProperty("host-interfaces-path");
-            String vlansPath = ProjectProperties.getProperty("vlans-path");
-            String routingPath = ProjectProperties.getProperty("routing-path");
-            String flowMatrixPath = ProjectProperties.getProperty("flow-matrix-path");
-            String vulnerabilityScanPath = ProjectProperties.getProperty("vulnerability-scan-path");
-            String openvasScanPath = ProjectProperties.getProperty("openvas-scan-path");
-            String genericScanPath = ProjectProperties.getProperty("generic-scan-path");
-            String mulvalInputPath = ProjectProperties.getProperty("mulval-input");
-            String topologyPath = ProjectProperties.getProperty("topology-path");
-            String vmPlacementPath = ProjectProperties.getProperty("placement-path");
-            String controllersPath = ProjectProperties.getProperty("controllers-path");
-            String ndnTopoPath = ProjectProperties.getProperty("ndn-topology-path");
-
+            final String mulvalInputScriptPath   = mulvalInputScriptFolder + "/main.py";
 
             File mulvalInputFile = new File(mulvalInputPath);
             if (mulvalInputFile.exists()) {

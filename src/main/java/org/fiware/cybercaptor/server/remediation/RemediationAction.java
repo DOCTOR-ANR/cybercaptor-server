@@ -22,12 +22,16 @@ package org.fiware.cybercaptor.server.remediation;
 
 
 import org.fiware.cybercaptor.server.attackgraph.Vertex;
+import org.fiware.cybercaptor.server.informationsystem.InformationSystem;
 import org.fiware.cybercaptor.server.informationsystem.InformationSystemHost;
 import org.fiware.cybercaptor.server.remediation.cost.OperationalCostParameters;
+import org.fiware.cybercaptor.server.remediation.serializable.SerializableDeployableRemediationAction ;
+import org.fiware.cybercaptor.server.database.Database;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.jdom2.Element;
 
 /**
  * Class that represents a remediation action to correct a vulnerability
@@ -36,19 +40,8 @@ import java.util.List;
  *
  * @author Francois -Xavier Aguessy
  */
-public class RemediationAction {
-    /**
-     * The type of action of the remediation action
-     */
-    private ActionType actionType;
-    /**
-     * The parameters contained in this remediation :
-     * if the remediation is a "APPLY_PATCH" : each object is a "Patch" object
-     * if the remediation is a "DEPLOY_SNORT_RULE" : each object is a "Rule"
-     * if the remediation is a "TRAIN_USER" : there is only one object : a String containing the name of the user to train
-     * if the remediation is a "DEPLOY_FIREWALL_RULE" : there is only one object : a "FirewallRule"
-     */
-    private List<Object> remediationParameters = new ArrayList<Object>(); //Can be patch, rule,...
+public abstract class RemediationAction {
+
     /**
      * The possible machines on which the remediation can be deployed
      */
@@ -69,71 +62,14 @@ public class RemediationAction {
      * @param costParametersFolder the cost parameters folder
      * @throws Exception the exception
      */
-    public RemediationAction(ActionType actionType, String costParametersFolder) throws Exception {
-        this.setActionType(actionType);
-        if (this.getActionType() == ActionType.APPLY_PATCH) {
-            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_PATCH);
-            if (parametersFile.exists()) {
-                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_PATCH);
-            }
-        } else if (this.getActionType() == ActionType.DEPLOY_FIREWALL_RULE) {
-            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_FIREWALL_RULE);
-            if (parametersFile.exists()) {
-                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_FIREWALL_RULE);
-            }
-        } else if (this.getActionType() == ActionType.DEPLOY_SNORT_RULE) {
-            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_SNORT_RULE);
-            if (parametersFile.exists()) {
-                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_SNORT_RULE);
-            }
-        } else if (this.getActionType() == ActionType.MOVE_VM) {
-            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_VM);
-            if (parametersFile.exists()) {
-                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_VM);
-            }
-        } else if (this.getActionType() == ActionType.MOVE_VM_DOMAIN) {
-            File parametersFile = new File(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_DOMAIN);
-            if (parametersFile.exists()) {
-                getOperationalCostParameters().loadFromXMLFile(costParametersFolder + "/" + OperationalCostParameters.FILE_NAME_DOMAIN);
-            }
-        }
-    }
+    public RemediationAction() { }
 
     /**
      * Gets action type.
      *
      * @return the action type
      */
-    public ActionType getActionType() {
-        return actionType;
-    }
-
-    /**
-     * Sets action type.
-     *
-     * @param actionType the action type
-     */
-    public void setActionType(ActionType actionType) {
-        this.actionType = actionType;
-    }
-
-    /**
-     * Gets remediation parameters.
-     *
-     * @return the remediation parameters
-     */
-    public List<Object> getRemediationParameters() {
-        return remediationParameters;
-    }
-
-    /**
-     * Sets remediation parameters.
-     *
-     * @param remediationParameters the remediation parameters
-     */
-    public void setRemediationParameters(List<Object> remediationParameters) {
-        this.remediationParameters = remediationParameters;
-    }
+    // TODO public abstract ActionType getActionType();
 
     /**
      * Gets possible machines.
@@ -263,39 +199,37 @@ public class RemediationAction {
         return Math.round((getRemediationCost() + getMaintenanceCost() + getRestartCost() + getDeploymentCost() + getTestCost()) * 100.0) / 100.0;
     }
 
-    @Override
-    public String toString() {
-        return "RemediationAction [actionType=" + getActionType()
-                + ", remediationParameters=" + getRemediationParameters()
-                + ", possibleMachines=" + getPossibleMachines() + ", relatedVertex="
-                + getRelatedVertex() + "]";
-    }
+    public abstract void toXMLElement( Element actionElement, Element typeElement );
 
+    public abstract void applyOnInformationSystem( InformationSystem informationSystem, InformationSystemHost host, Database db );
+
+    public abstract SerializableDeployableRemediationAction makeSerializableDeployableRemediationAction(InformationSystemHost host);
 
     /**
      * The possible types of remediation
      */
-    public static enum ActionType {
-        /**
+    // TODO
+    /*public static enum ActionType {
+        **
          * Applying a patch
-         */
-        APPLY_PATCH, /**
+         *
+        APPLY_PATCH, **
          * Deploying a snort rule
-         */
-        DEPLOY_SNORT_RULE, /**
+         *
+        DEPLOY_SNORT_RULE, **
          * Training a user
-         */
-        TRAIN_USER, /**
+         *
+        TRAIN_USER, **
          * Deploying a firewall rule
-         */
-        DEPLOY_FIREWALL_RULE, /**
+         *
+        DEPLOY_FIREWALL_RULE, **
          * Move a VM
-         */
-        MOVE_VM, /**
+         *
+        MOVE_VM, **
          * Move a VM to another domain
-         */
+         *
         MOVE_VM_DOMAIN
     }
-
-
+    */
 }
+

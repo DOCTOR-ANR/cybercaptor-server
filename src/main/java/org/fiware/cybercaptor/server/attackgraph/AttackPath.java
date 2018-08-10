@@ -29,7 +29,6 @@ import org.fiware.cybercaptor.server.informationsystem.InformationSystemHost;
 import org.fiware.cybercaptor.server.informationsystem.Service;
 import org.fiware.cybercaptor.server.informationsystem.graph.InformationSystemGraph;
 import org.fiware.cybercaptor.server.remediation.*;
-import org.fiware.cybercaptor.server.remediation.RemediationAction.ActionType;
 import org.fiware.cybercaptor.server.topology.Topology;
 import org.fiware.cybercaptor.server.topology.asset.Host;
 import org.fiware.cybercaptor.server.topology.asset.IPAddress;
@@ -46,6 +45,8 @@ import org.jdom2.input.SAXBuilder;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Class used to represent an attack path.
@@ -82,20 +83,20 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      */
     static private List<List<RemediationAction>> computeRemediationToPathWithLeafRemediations(List<Vertex> leavesToCorrect, int indexInPath, HashMap<Integer, List<List<RemediationAction>>> howToRemediateLeaves)
     {
-    	System.out.println("computeRemediationToPathWithLeafRemediations recursion depth : " + indexInPath);
+    	Logger.getAnonymousLogger().log( Level.INFO, "computeRemediationToPathWithLeafRemediations leavesToCorrect# = " + leavesToCorrect.size() + ", indexInPath = " + indexInPath);
 
         //Recursive function on the number of remaining leaves to correct
         if (indexInPath > leavesToCorrect.size() - 1)
         { //path empty
             //Normally this case should never happen
-        	System.out.println("Anomalous call in computeRemediationToPathWithLeafRemediations()");
+        	Logger.getAnonymousLogger().log( Level.INFO, "Anomalous call in computeRemediationToPathWithLeafRemediations()");
             return new ArrayList<List<RemediationAction>>();
         }
         else if (indexInPath == leavesToCorrect.size() - 1)
         { //one leaf
             //Stop case of the recursion, we return the mean to correct only one leaf
             Vertex currentLeaf = leavesToCorrect.get(indexInPath);
-            System.out.println("recursion termination in computeRemediationToPathWithLeafRemediations()");
+            Logger.getAnonymousLogger().log( Level.INFO, "recursion termination in computeRemediationToPathWithLeafRemediations()");
             return howToRemediateLeaves.get(currentLeaf.id);
         }
         else
@@ -168,10 +169,14 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * @return the list of list of k integers
      */
     public static List<List<Integer>> combination(int k, int n) {
+
+        Logger.getAnonymousLogger().log( Level.INFO, "computing C(" + k + "," + n + ")" );
+
         List<Integer> listNumber = new ArrayList<Integer>();
         for (int i = 0; i < n; i++) {
             listNumber.add(i);
         }
+
         List<List<Integer>> result = new ArrayList<List<Integer>>();
         combinationRecursive(k, listNumber, 0, new ArrayList<Integer>(), result);
         return result;
@@ -254,23 +259,38 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      */
     public List<Vertex> getLeavesThatCanBeRemediated()
     {
+	Logger.getAnonymousLogger().log(Level.INFO, "getLeavesThatCanBeRemediated()" );
+
         List<Vertex> result = new ArrayList<Vertex>();
         for (int i : this.vertices.keySet())
         {
             Vertex vertex = this.vertices.get(i);
+
+	    Logger.getAnonymousLogger().log(Level.INFO, "looking vertex " + vertex.toLongString() );
+
             vertex.computeParentsAndChildren(this);
+
             if (vertex.parents.size() == 0)
             {
+	    	Logger.getAnonymousLogger().log(Level.INFO, "vertex without parents" );
+
                 if (vertex.fact != null && vertex.fact.datalogCommand != null && vertex.fact.datalogCommand.command != null)
                 {
                     String command = vertex.fact.datalogCommand.command;
-                    if (command.equals("vulExists") || command.equals("hacl") || command.equals("haclprimit") || command.toLowerCase().contains("vlan") || command.equals("attackerLocated") || command.equals("vmOnHost") || command.equals("vmInDomain") || command.equals("ndnServiceInfo") || command.equals("faceIsLinked"))
+                    if (command.equals("vulExists") || command.equals("hacl") || command.equals("haclprimit") || command.toLowerCase().contains("vlan") || command.equals("attackerLocated") || command.equals("vmOnHost") || command.equals("vmInDomain") || command.equals("ndnServiceInfo") )
+		    {
+	    		Logger.getAnonymousLogger().log(Level.INFO, "vertex can be remediated" );
                         result.add(vertex);
+		    }
+
                 }
-            } else
-            {
+            } else /* vertex.parents.size() > 0 */ {
+
+	    	Logger.getAnonymousLogger().log(Level.INFO, "vertex with parents" );
+
                 if (vertex.fact != null && vertex.fact.datalogCommand != null && vertex.fact.datalogCommand.command != null && vertex.fact.datalogCommand.command.equals("hacl"))
                 {
+	    	    Logger.getAnonymousLogger().log(Level.INFO, "vertex can be remediated" );
                     result.add(vertex);
                 }
             }
@@ -293,71 +313,6 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
         return goal;
     }
 
-    /**
-     * @param topology the network topology
-     * @param conn     database connection
-     * @return the list of possible remediation actions to remediate this attack path : remediation[1] OR remediation[2] OR remediation[3] ; remediation[1] = remediation[1][1] AND remediation[1][2]...
-     */
-   /* public List<List<RemediationAction>> getRemediationAction(InformationSystem topology, Connection conn, String costParametersFolder) throws Exception {
-        List<List<RemediationAction>> result = new ArrayList<List<RemediationAction>>();
-
-
-        List<Vertex> leaves = this.getLeavesThatCanBeRemediated();
-
-        //Compute all possible sufficient combination of leaves to cut the attack path
-        List<List<Vertex>> sufficientLeavesToCutPath = new ArrayList<List<Vertex>>();
-        List<Vertex> remainingLeaves = new ArrayList<Vertex>(leaves);
-        int simultaneousLeavesNumber = 1;
-
-        while (simultaneousLeavesNumber <= remainingLeaves.size()) { //While we take a number of leaves lower than the number of remaining leaves
-            List<List<Integer>> combination = combination(simultaneousLeavesNumber, remainingLeaves.size());
-            List<Vertex> leavesSufficient = new ArrayList<Vertex>();
-
-            for (List<Integer> aCombination : combination) {
-                List<Vertex> leavesToTest = new ArrayList<Vertex>();
-                for (Integer anACombination : aCombination) {
-                	Vertex ve = remainingLeaves.get(anACombination);
-                    leavesToTest.add(ve.clone());
-                }
-                if (leavesMandatoryForGoal(leavesToTest)) {
-                    sufficientLeavesToCutPath.add(leavesToTest);
-                    leavesSufficient.addAll(leavesToTest);
-                }
-            }
-
-            /*for (Vertex aLeavesSufficient : leavesSufficient) {
-                remainingLeaves.remove(aLeavesSufficient);
-            }*/
-
-      /*      simultaneousLeavesNumber++;
-        }
-
-        //Create a hashlist of the list of remediation for each leaf (possible_actions[1] OR possible_actions[2] OR possible_actions[3] .... with possible_actions[1] = possible_actions[1][1] AND possible_actions[1][2] AND possible_actions[1][3]
-        HashMap<Integer, List<List<RemediationAction>>> howToRemediateLeaves = new HashMap<Integer, List<List<RemediationAction>>>();
-        for (Vertex leaf : leaves) {
-            howToRemediateLeaves.put(leaf.id, getRemediationActionForLeaf(leaf, topology, conn, costParametersFolder));
-        }
-
-
-        //Try to see how to remediate each list of leaf
-        for (List<Vertex> aSufficientLeavesToCutPath : sufficientLeavesToCutPath) {
-            //List<RemediationAction> pathRemediations = new ArrayList<RemediationAction>();
-            boolean pathCanBeRemediated = true;
-
-            //For all leaf list that can cut the attack path
-            for (Vertex leaf : aSufficientLeavesToCutPath) {
-                if (howToRemediateLeaves.get(leaf.id).isEmpty())
-                    pathCanBeRemediated = false;
-
-            }
-            if (pathCanBeRemediated) {
-                result.addAll(computeRemediationToPathWithLeafRemediations(aSufficientLeavesToCutPath, 0, howToRemediateLeaves));
-            }
-        }
-
-        return result;
-    }*/
-    
     /**
      * Test if the vertices list contains at least one set in lists.
      * @param vertices : a set of vertices
@@ -384,17 +339,19 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      */
     void printVertices(List<Vertex> vertices)
     {
-    	System.out.print("Leaves sufficient subset : ");
+    	Logger.getAnonymousLogger().log( Level.INFO, "Leaves sufficient subset : ");
     	for (Vertex v : vertices)
     	{
     		if  (v.fact != null && v.fact.datalogCommand != null && v.fact.datalogCommand.command != null)
     		{
-    			System.out.print(v.fact.datalogCommand.command + "(");
-    			for (int i = 0 ; i < v.fact.datalogCommand.params.length ; i++) System.out.print(v.fact.datalogCommand.params[i] + ',');
-    			System.out.print(") + ");
+    			Logger.getAnonymousLogger().log( Level.INFO, v.fact.datalogCommand.command + "(");
+    			for (int i = 0 ; i < v.fact.datalogCommand.params.length ; i++) {
+				Logger.getAnonymousLogger().log( Level.INFO, v.fact.datalogCommand.params[i] + ',');
+			}
+    			Logger.getAnonymousLogger().log( Level.INFO, ") + ");
     		}
     	}
-    	System.out.print("\n");
+    	//Logger.getAnonymousLogger().log( Level.INFO, "\n");
     }
 
     /**
@@ -402,27 +359,32 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * @param conn     database connection
      * @return the list of possible remediation actions to remediate this attack path : remediation[1] OR remediation[2] OR remediation[3] ; remediation[1] = remediation[1][1] AND remediation[1][2]... [Withour snort rules]
      */
-    public List<List<RemediationAction>> getRemedationActions(InformationSystem topology, Connection conn, String costParametersFolder) throws Exception {
+    protected List<List<RemediationAction>> getRemediationActions(InformationSystem topology, Connection conn, String costParametersFolder) throws Exception {
+
+        Logger.getAnonymousLogger().log( Level.INFO, "getRemediationActions()");
+
         List<List<RemediationAction>> result = new ArrayList<List<RemediationAction>>();
         boolean useSnortRules = true;
-
         
-        double startTime = System.nanoTime();
-        List<Vertex> leaves = this.getLeavesThatCanBeRemediated();
-  
-        double endTime = System.nanoTime();
+        double startTime   = System.nanoTime();
+
+        List<Vertex> leavesThatCanBeRemediated = this.getLeavesThatCanBeRemediated();
+
+        double endTime     = System.nanoTime();
         double processTime = (endTime - startTime) / 1000000;
-        System.out.println("getLeavesThatCanBeRemediated time : " + processTime + " ms");
+        Logger.getAnonymousLogger().log( Level.INFO, "getLeavesThatCanBeRemediated time : " + processTime + " ms");
+
         startTime = endTime;
+
         int cpt_enumeration = 0;
 
-        //Compute all possible sufficient combination of leaves to cut the attack path
+        // compute all possible sufficient combination of leaves to cut the attack path
         List<List<Vertex>> sufficientLeavesToCutPath = new ArrayList<List<Vertex>>();
-        List<Vertex> remainingLeaves = new ArrayList<Vertex>(leaves);
-        int simultaneousLeavesNumber = 1;
+        List<Vertex> remainingLeaves = new ArrayList<Vertex>(leavesThatCanBeRemediated);
 
-        while (simultaneousLeavesNumber <= remainingLeaves.size())
-        { //While we take a number of leaves lower than the number of remaining leaves
+        for( int simultaneousLeavesNumber = 1; simultaneousLeavesNumber <= remainingLeaves.size(); simultaneousLeavesNumber++ )
+        { 
+	    // while we take a number of leaves lower than the number of remaining leaves
             List<List<Integer>> combination = combination(simultaneousLeavesNumber, remainingLeaves.size());
             List<Vertex> leavesSufficient = new ArrayList<Vertex>();
 
@@ -431,18 +393,24 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
             {
             	cpt_enumeration++;
                 List<Vertex> leavesToTest = new ArrayList<Vertex>();
+
                 for (Integer anACombination : aCombination)
                 {
                     leavesToTest.add(remainingLeaves.get(anACombination).clone());
                 }
-                if (isSuperSubSet(leavesToTest, sufficientLeavesToCutPath) || leavesToTest.size() == 0) continue;  // if the leaves contains another leaves set that is sufficient to cut attack
+                if (isSuperSubSet(leavesToTest, sufficientLeavesToCutPath) || leavesToTest.size() == 0) 
+		{
+			continue;  // if the leaves contains another leaves set that is sufficient to cut attack
+		}
                 if (leavesMandatoryForGoal(leavesToTest))
                 {
                 	// remove leaves that cannot be remediated but must be present on the graph
+
                 	List<Vertex> leavesToTest2 = new ArrayList<Vertex>();
+
                 	for (Vertex v : leavesToTest)
                 	{
-                		if (!(v.fact != null && v.fact.datalogCommand != null && v.fact.datalogCommand.command != null && (v.fact.datalogCommand.command.contains("attackerLocated") || v.fact.datalogCommand.command.contains("isInVlan") || v.fact.datalogCommand.command.contains("vulProperty"))))
+                		if ( v.isRemediable() ) 
                 		{
                 			leavesToTest2.add(v);
                 		}
@@ -458,48 +426,58 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
             {
                 remainingLeaves.remove(aLeavesSufficient);
             }*/
-
-            simultaneousLeavesNumber++;
         }
         
-        System.out.println("number of sufficient leaves subsets found : " + sufficientLeavesToCutPath.size());
+        Logger.getAnonymousLogger().log( Level.INFO, "number of sufficient leaves subsets found : " + sufficientLeavesToCutPath.size());
         
-        endTime = System.nanoTime();
+        endTime     = System.nanoTime();
         processTime = (endTime - startTime) / 1000000;
-        System.out.println("combinatorial enumeration time : " + processTime + " ms (" + cpt_enumeration + " leaves subsets)");
-        startTime = endTime;
+        Logger.getAnonymousLogger().log( Level.INFO, "combinatorial enumeration time : " + processTime + " ms (" + cpt_enumeration + " leaves subsets)");
 
-        //Create a hashlist of the list of remediation for each leaf (possible_actions[1] OR possible_actions[2] OR possible_actions[3] .... with possible_actions[1] = possible_actions[1][1] AND possible_actions[1][2] AND possible_actions[1][3]
-        HashMap<Integer, List<List<RemediationAction>>> howToRemediateLeaves = new HashMap<Integer, List<List<RemediationAction>>>();
-        for (Vertex leaf : leaves) {
-            howToRemediateLeaves.put(leaf.id, getRemediationActionForLeaf(leaf, topology, conn, costParametersFolder, useSnortRules));
-        }
-        
-        endTime = System.nanoTime();
-        processTime = (endTime - startTime) / 1000000;
-        System.out.println("remediation per leaf computation time : " + processTime + " ms");
-        startTime = endTime;
+	if( sufficientLeavesToCutPath.isEmpty() ) {
 
-        //Try to see how to remediate each list of leaf
-        for (List<Vertex> aSufficientLeavesToCutPath : sufficientLeavesToCutPath)
-        {
-            //List<RemediationAction> pathRemediations = new ArrayList<RemediationAction>();
-            boolean pathCanBeRemediated = true;
+		Logger.getAnonymousLogger().log( Level.INFO, "Can not cut path !!!");
 
-            //For all leaf list that can cut the attack path
-            for (Vertex leaf : aSufficientLeavesToCutPath)
-            {
-                if (howToRemediateLeaves.get(leaf.id).isEmpty()) pathCanBeRemediated = false;
-            }
-            if (pathCanBeRemediated)
-            {
-                result.addAll(computeRemediationToPathWithLeafRemediations(aSufficientLeavesToCutPath, 0, howToRemediateLeaves));
-            }
-        }
-        
-        endTime = System.nanoTime();
-        processTime = (endTime - startTime) / 1000000;
-        System.out.println("remediation proposition fusion time : " + processTime + " ms");
+	} else {
+
+		startTime = endTime;
+
+		// Create a hashlist of the list of remediation for each leaf 
+		// (possible_actions[1] OR possible_actions[2] OR possible_actions[3] .... 
+		// with possible_actions[1] = possible_actions[1][1] AND possible_actions[1][2] AND possible_actions[1][3]
+		HashMap<Integer, List<List<RemediationAction>>> howToRemediateLeaves = new HashMap<Integer, List<List<RemediationAction>>>();
+
+		for (Vertex leafThatCanBeRemediated : leavesThatCanBeRemediated) 
+		{
+		    howToRemediateLeaves.put( leafThatCanBeRemediated.id, getRemediationActionForLeaf(leafThatCanBeRemediated, topology, conn, costParametersFolder, useSnortRules));
+		}
+		
+		endTime     = System.nanoTime();
+		processTime = (endTime - startTime) / 1000000;
+		Logger.getAnonymousLogger().log( Level.INFO, "remediation per leaf computation time : " + processTime + " ms");
+		startTime   = endTime;
+
+		//Try to see how to remediate each list of leaf
+		for (List<Vertex> aSufficientLeavesToCutPath : sufficientLeavesToCutPath)
+		{
+		    //List<RemediationAction> pathRemediations = new ArrayList<RemediationAction>();
+		    boolean pathCanBeRemediated = true;
+
+		    //For all leaf list that can cut the attack path
+		    for (Vertex leaf : aSufficientLeavesToCutPath)
+		    {
+			if (howToRemediateLeaves.get(leaf.id).isEmpty()) pathCanBeRemediated = false;
+		    }
+		    if (pathCanBeRemediated)
+		    {
+			result.addAll(computeRemediationToPathWithLeafRemediations(aSufficientLeavesToCutPath, 0, howToRemediateLeaves));
+		    }
+		}
+		
+		endTime     = System.nanoTime();
+		processTime = (endTime - startTime) / 1000000;
+		Logger.getAnonymousLogger().log( Level.INFO, "remediation proposition fusion time : " + processTime + " ms");
+	}
 
         return result;
     }
@@ -513,21 +491,26 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      */
     public List<DeployableRemediation> getDeployableRemediations(InformationSystem topology, Connection conn, String costParametersFolder) throws Exception
     {
-        List<List<RemediationAction>> remediationActions = this.getRemedationActions(topology, conn, costParametersFolder);
-        List<DeployableRemediation> result = new ArrayList<DeployableRemediation>();
+        Logger.getAnonymousLogger().log( Level.INFO, "getDeployableRemediations()");
+
+        List<List<RemediationAction>> remediationActionListOfList = getRemediationActions(topology, conn, costParametersFolder);
+        List<DeployableRemediation>   result                      = new ArrayList<DeployableRemediation>();
         
         double startTime = System.nanoTime();
         
+        Logger.getAnonymousLogger().log( Level.INFO, "remediationActionListOfList nb=" + remediationActionListOfList.size() );
+
         //For all "OR" remediations
-        for (List<RemediationAction> remediationAction1 : remediationActions)
+        for (List<RemediationAction> remediationActionList : remediationActionListOfList)
         {
             List<DeployableRemediation> result_tmp = new ArrayList<DeployableRemediation>(); //Result for only this group of remediations
+
             DeployableRemediation dr = new DeployableRemediation(this, topology);
             dr.setActions(new ArrayList<DeployableRemediationAction>());
             result_tmp.add(dr);
 
             //For all "AND" remediations
-            for (RemediationAction remediationAction : remediationAction1)
+            for (RemediationAction remediationAction : remediationActionList)
             {
                 if (remediationAction.getPossibleMachines().size() > 1)
                 {
@@ -544,6 +527,8 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                             DeployableRemediationAction deployableRemediationAction = new DeployableRemediationAction();
                             deployableRemediationAction.setRemediationAction(remediationAction);
                             deployableRemediationAction.setHost(remediationAction.getPossibleMachines().get(m));
+
+			    Logger.getAnonymousLogger().log( Level.INFO, "adding tmp deployableRemediationAction " + deployableRemediationAction);
                             newdr.getActions().add(deployableRemediationAction);
                         }
                     }
@@ -553,6 +538,8 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                         DeployableRemediationAction deployableRemediationAction = new DeployableRemediationAction();
                         deployableRemediationAction.setRemediationAction(remediationAction);
                         deployableRemediationAction.setHost(remediationAction.getPossibleMachines().get(0));
+
+		        Logger.getAnonymousLogger().log( Level.INFO, "adding tmp deployableRemediationAction" + deployableRemediationAction );
                         aResult_tmp.getActions().add(deployableRemediationAction);
                     }
                     result_tmp.addAll(resultForThisRemediationAction);
@@ -564,6 +551,8 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                         DeployableRemediationAction deployableRemediationAction = new DeployableRemediationAction();
                         deployableRemediationAction.setRemediationAction(remediationAction);
                         deployableRemediationAction.setHost(remediationAction.getPossibleMachines().get(0));
+
+		        Logger.getAnonymousLogger().log( Level.INFO, "adding tmp deployableRemediationAction" + deployableRemediationAction );
                         aResult_tmp.getActions().add(deployableRemediationAction);
                     }
                 }
@@ -572,7 +561,12 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
             //Add all the non empty Deployable Remediation Action to the result
             for (DeployableRemediation aResult_tmp : result_tmp)
             {
-                if (aResult_tmp.getActions().size() > 0) result.add(aResult_tmp);
+                if (aResult_tmp.getActions().size() > 0) {
+		        Logger.getAnonymousLogger().log( Level.INFO, "adding deployableRemediation" );
+			result.add(aResult_tmp);
+		} else {
+		        Logger.getAnonymousLogger().log( Level.INFO, "ignoring empty deployableRemediation" );
+		}
             }
         }
 
@@ -583,13 +577,13 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
 
         double endTime = System.nanoTime();
         double processTime = (endTime - startTime) / 1000000;
-        System.out.println("Deployable computation time : " + processTime + " ms");
+        Logger.getAnonymousLogger().log( Level.INFO, "Deployable computation time : " + processTime + " ms");
         startTime = endTime;
         
         Collections.sort(result, new DeployableRemediationComparator());
         endTime = System.nanoTime();
         processTime = (endTime - startTime) / 1000000;
-        System.out.println("Deployable remadiation sorting time : " + processTime + " ms");
+        Logger.getAnonymousLogger().log( Level.INFO, "Deployable remediation sorting time : " + processTime + " ms");
 
         return result;
     }
@@ -617,31 +611,6 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                 } else if (command.command.equals("inCompetent")) {
                     scoring *= 1. / 100;
                 }
-                //Cheat to have the good attack path for demo first :
-                if (command.command.equals("vulExists") && command.params[1].equals("CVE-2004-1315")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("vulExists") && command.params[1].equals("CVE-2012-3951")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("networkServiceInfo") && command.params[1].equals("sonicwall_scrutinizer")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("hacl") && command.params[0].equals("192.168.240.200") && command.params[1].equals("192.168.240.100") && command.params[3].equals("3306")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("hacl") && command.params[0].equals("internet") && command.params[1].equals("192.168.240.200") && command.params[3].equals("80")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("execCode") && command.params[0].equals("192.168.240.100")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("execCode") && command.params[0].equals("192.168.240.200")) {
-                    scoring *= 10;
-                }
-                if (command.command.equals("netAccess") && command.params[0].equals("192.168.240.200")) {
-                    scoring *= 10;
-                }
             }
         }
     }
@@ -653,15 +622,16 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * @param conn     the database connection
      * @throws Exception
      */
-    public void printListRemediations(InformationSystem topology, Connection conn) throws Exception {
+    // UNUSED !!!
+    protected void printListRemediations(InformationSystem topology, Connection conn) throws Exception {
         List<Vertex> leaves = this.getLeavesThatCanBeRemediated();
         if (this.getGoal() != null) {
-            System.out.print("The goal of this attack is vertex " + this.getGoal().id);
+            Logger.getAnonymousLogger().log( Level.INFO, "The goal of this attack is vertex " + this.getGoal().id);
             if (this.getGoal().fact != null && this.getGoal().fact.factString != null)
-                System.out.print(" : " + this.getGoal().fact.factString);
-            System.out.println();
+                Logger.getAnonymousLogger().log( Level.INFO, " : " + this.getGoal().fact.factString);
+            //System.out.println();
         }
-        System.out.println("The attack path contains " + leaves.size() + " leaves : ");
+        Logger.getAnonymousLogger().log( Level.INFO, "The attack path contains " + leaves.size() + " leaves : ");
 
         List<List<Vertex>> sufficientLeavesToCutPath = new ArrayList<List<Vertex>>();
         List<Vertex> remainingLeaves = new ArrayList<Vertex>(leaves);
@@ -689,24 +659,24 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
             simultaneousLeavesNumber++;
         }
 
-        System.out.println("Here are the list of all the combinations of leaves that permit to cut the attack path ");
+        Logger.getAnonymousLogger().log( Level.INFO, "Here are the list of all the combinations of leaves that permit to cut the attack path ");
         for (int i = 0; i < sufficientLeavesToCutPath.size(); i++) {
-            System.out.print("Combination  " + (i + 1) + " : ");
+            Logger.getAnonymousLogger().log( Level.INFO, "Combination  " + (i + 1) + " : ");
             for (int j = 0; j < sufficientLeavesToCutPath.get(i).size(); j++) {
-                System.out.print("Leaf " + sufficientLeavesToCutPath.get(i).get(j).id);
+                Logger.getAnonymousLogger().log( Level.INFO, "Leaf " + sufficientLeavesToCutPath.get(i).get(j).id);
                 if (j < sufficientLeavesToCutPath.get(i).size() - 1)
-                    System.out.print(" + ");
+                    Logger.getAnonymousLogger().log( Level.INFO, " + ");
             }
-            System.out.println();
+            //System.out.println();
         }
 
-        System.out.println("\n------------------------------------");
-        System.out.println("Here is how to remediate each leaf :");
-        System.out.println("------------------------------------");
+        Logger.getAnonymousLogger().log( Level.INFO, "\n------------------------------------");
+        Logger.getAnonymousLogger().log( Level.INFO, "Here is how to remediate each leaf :");
+        Logger.getAnonymousLogger().log( Level.INFO, "------------------------------------");
 
         for (Vertex leaf : leaves) {
-            System.out.print(remediateLeaf(leaf, topology, conn));
-            System.out.println("----------------------------------");
+            Logger.getAnonymousLogger().log( Level.INFO, remediateLeaf(leaf, topology, conn));
+            Logger.getAnonymousLogger().log( Level.INFO, "----------------------------------");
         }
 
     }
@@ -718,7 +688,8 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * @return The string that contains the text to remediate a leaf
      * @throws Exception
      */
-    public String remediateLeaf(Vertex leaf, InformationSystem topology, Connection conn) throws Exception {
+    // UNUSED !!!
+    protected String remediateLeaf(Vertex leaf, InformationSystem topology, Connection conn) throws Exception {
         String result = "";
         result += "* Leaf " + leaf.id + "\n";
         if (leaf.fact != null && leaf.fact.type == FactType.DATALOG_FACT && leaf.fact.datalogCommand != null) {
@@ -785,7 +756,7 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                         }
                         result += "\n";
                     }
-                    System.out.println("The following firewall rule should be deployed on all the paths between \"" + from.getName() + "\" and \"" + to.getName() + "\". (See above)");
+                    Logger.getAnonymousLogger().log( Level.INFO, "The following firewall rule should be deployed on all the paths between \"" + from.getName() + "\" and \"" + to.getName() + "\". (See above)");
                     if (command.params[0].equals("internet")) {
                         result += "DROP\t" + Protocol.getProtocolFromString(command.params[2]) + "\t--\t0.0.0.0/0\t" + to.getFirstIPAddress().getAddress() + "/32\t" + "dpt:" + Service.portStringToInt(command.params[3]) + "\n";
                     } else if (command.params[1].equals("internet")) {
@@ -807,90 +778,133 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
     }
 
     /**
-     * @param leaf     An attack path leaf
-     * @param topology the network topology
-     * @param conn     the database connection
-     * @return the possible remediation action to remediate this leaf. To remediate the leaf, we can apply remediation[1] OR remadiation[2] OR remediation[3]
-     * the remediation[1] is remediation[1][1] AND remediation[1][2] AND remediation[1][3] etc...
-     * @throws Exception
-     */
-    /*public List<List<RemediationAction>> getRemediationActionForLeaf(Vertex leaf, InformationSystem topology, Connection conn, String costParametersFolder) throws Exception {
-        return getRemediationActionForLeaf(leaf, topology, conn, costParametersFolder, true);
-    }*/
-
-    /**
      * @param leaf         An attack path leaf
      * @param topology     the network topology
      * @param conn         the database connection
      * @param useSnortRule : if true, use the snort rules else don't use it for remediation
-     * @return the possible remediation action to remediate this leaf. To remediate the leaf, we can apply remediation[1] OR remadiation[2] OR remediation[3]
+     * @return the possible remediation action to remediate this leaf. To remediate the leaf, we can apply remediation[1] OR remediation[2] OR remediation[3]
      * the remediation[1] is remediation[1][1] AND remediation[1][2] AND remediation[1][3] etc...
      * @throws Exception
      */
-    public List<List<RemediationAction>> getRemediationActionForLeaf(Vertex leaf, InformationSystem topology, Connection conn, String costParametersFolder, boolean useSnortRule) throws Exception {
+    protected List<List<RemediationAction>> getRemediationActionForLeaf(Vertex leaf, InformationSystem topology, Connection conn, String costParametersFolder, boolean useSnortRule) throws Exception {
+
+	Logger.getAnonymousLogger().log(Level.INFO, "getRemediationActionForLeaf(" + leaf.toLongString() + ")" );
+
         List<List<RemediationAction>> result = new ArrayList<List<RemediationAction>>();
+
         if (leaf.fact != null && leaf.fact.type == FactType.DATALOG_FACT && leaf.fact.datalogCommand != null) {
+
             DatalogCommand command = leaf.fact.datalogCommand;
 
             switch (command.command) {
+
                 case "vulExists": {
+
+                    boolean use_magic = false;
+
+                    if( use_magic ) {
+			    RemediationAction magic = new MagicRemediationAction();
+			    magic.setRelatedVertex(leaf);
+			    // magic.getPossibleMachines().add(leaf.getRelatedMachine(topology));
+			    List<RemediationAction> magicRemediateVulnerability = new ArrayList<RemediationAction>();
+			    magicRemediateVulnerability.add( magic );
+			    Logger.getAnonymousLogger().log(Level.INFO, "adding action: " + magicRemediateVulnerability );
+			    result.add( magicRemediateVulnerability );
+                    }
+
                     List<RemediationAction> remediateVulnerability = new ArrayList<RemediationAction>();
-                    Vulnerability vulnerability = new Vulnerability(conn, Vulnerability.getIdVulnerabilityFromCVE(command.params[1], conn));
-                    List<List<InformationSystemHost>> attackerPath = getAttackerRouteToAVulnerability(leaf, topology);
 
-                    List<Patch> patches = vulnerability.getPatchs(conn); //Get the path of this vulnerability
+		    int vulnId = Vulnerability.getIdVulnerabilityFromCVE(command.params[1], conn);
 
-                    List<Rule> rules = vulnerability.getRules(conn); //Get the snort rules related to this vulnerability
+		    if( -1 == vulnId ) {
 
-                    if (patches.size() > 0) {
-                        RemediationAction remediation = new RemediationAction(ActionType.APPLY_PATCH, costParametersFolder);
-                        remediation.setRelatedVertex(leaf);
-                        remediation.getPossibleMachines().add(leaf.getRelatedMachine(topology));
+			    Logger.getAnonymousLogger().log(Level.INFO, "Vulnerability not found in database" );
 
-                        for (Patch patche : patches) {
-                            remediation.getRemediationParameters().add(patche);
-                        }
-                        remediateVulnerability.add(remediation);
-                        result.add(remediateVulnerability);
-                    }
-                    if (rules.size() > 0 && useSnortRule) {
-                        //If there is a rule, to remediate the leaf, we can deploy rule 1 OR rule 2 OR rule 3 but on ALL possible paths
-                        List<RemediationAction> detectVulnerabilityOnAllPath = new ArrayList<RemediationAction>();
-                        //For all possible path
-                        for (List<InformationSystemHost> anAttackerPath : attackerPath) {
+                    } else {
 
-                            RemediationAction remediation = new RemediationAction(ActionType.DEPLOY_SNORT_RULE, costParametersFolder);
-                            remediation.setRelatedVertex(leaf);
-                            for (Rule rule : rules) {
-                                rule.setRule(rule.getRule().replaceFirst("alert", "reject"));
-                                remediation.getRemediationParameters().add(rule);
-                            }
+			    Logger.getAnonymousLogger().log(Level.INFO, "Vulnerability found in database id=" + vulnId );
 
-                            for (InformationSystemHost anAnAttackerPath : anAttackerPath) {
-                                //TODO : Add the machine to the "possible machines" only if snort is installed  (need a way to specify this in the input file)
-                                //if(attackerPath.get(j).get(incr).getServices().containsKey("snort"))
-                                remediation.getPossibleMachines().add(anAnAttackerPath); //The path
-                            }
+			    Vulnerability vulnerability = new Vulnerability(conn, vulnId);
+			    Logger.getAnonymousLogger().log(Level.INFO, "Handling vulExists: " + vulnerability );
 
-                            detectVulnerabilityOnAllPath.add(remediation);
-                        }
-                        //Add the detection of vulnerability on all path
-                        result.add(detectVulnerabilityOnAllPath);
-                    }
+			    List<List<InformationSystemHost>> attackerPath = getAttackerRouteToAVulnerability(leaf, topology);
+
+			    List<Patch> patches = vulnerability.getPatchs(conn); //Get the path of this vulnerability
+
+			    Logger.getAnonymousLogger().log(Level.INFO, "vuln has patch nb = " + patches.size() );
+
+			    if (patches.size() == 0) {
+
+				if( command.params.length >= 2 ) {
+					String productName = command.params[2];
+					Patch upgradePatch = Patch.upgradeToLastKnownVersion(conn, productName);
+
+					if( null != upgradePatch ) {
+						Logger.getAnonymousLogger().log(Level.INFO, "add " + productName + " upgrade patch");
+						patches.add( upgradePatch );
+					}
+				}
+			    }
+
+			    if (patches.size() > 0) {
+
+				PatchRemediationAction remediation = new PatchRemediationAction(costParametersFolder);
+				remediation.setRelatedVertex(leaf);
+				remediation.getPossibleMachines().add(leaf.getRelatedMachine(topology));
+
+				for (Patch patche : patches) {
+				    remediation.patches.add(patche);
+				}
+				remediateVulnerability.add(remediation);
+				Logger.getAnonymousLogger().log(Level.INFO, "adding action: " + remediateVulnerability );
+				result.add(remediateVulnerability);
+			    }
+
+			    List<Rule> rules = vulnerability.getRules(conn); //Get the snort rules related to this vulnerability
+
+			    if (rules.size() > 0 && useSnortRule) {
+				//If there is a rule, to remediate the leaf, we can deploy rule 1 OR rule 2 OR rule 3 but on ALL possible paths
+				List<RemediationAction> detectVulnerabilityOnAllPath = new ArrayList<RemediationAction>();
+				//For all possible path
+				for (List<InformationSystemHost> anAttackerPath : attackerPath) {
+
+				    SnortRemediationAction remediation = new SnortRemediationAction(costParametersFolder);
+				    remediation.setRelatedVertex(leaf);
+				    for (Rule rule : rules) {
+					rule.setRule(rule.getRule().replaceFirst("alert", "reject"));
+					remediation.rules.add(rule);
+				    }
+
+				    for (InformationSystemHost anAnAttackerPath : anAttackerPath) {
+					//TODO : Add the machine to the "possible machines" only if snort is installed  (need a way to specify this in the input file)
+					//if(attackerPath.get(j).get(incr).getServices().containsKey("snort"))
+					remediation.getPossibleMachines().add(anAnAttackerPath); //The path
+				    }
+
+				    detectVulnerabilityOnAllPath.add(remediation);
+				}
+				//Add the detection of vulnerability on all path
+				result.add(detectVulnerabilityOnAllPath);
+			    }
+		    }
                     break;
                 }
-                case "inCompetent":
+                case "inCompetent": {
+
                     List<RemediationAction> trainUser = new ArrayList<RemediationAction>();
-                    RemediationAction remediation = new RemediationAction(ActionType.TRAIN_USER, costParametersFolder);
+
+                    TrainUserRemediationAction remediation = new TrainUserRemediationAction( command.params[0], costParametersFolder );
                     remediation.setRelatedVertex(leaf);
-                    remediation.getRemediationParameters().add(command.params[0]);
+
                     trainUser.add(remediation);
                     result.add(trainUser);
                     break;
+                }
                 case "hacl":
                 case "haclprimit": {
+
                     InformationSystemHost from = topology.getHostByNameOrIPAddress(command.params[0]);
-                    InformationSystemHost to = topology.getHostByNameOrIPAddress(command.params[1]);
+                    InformationSystemHost to   = topology.getHostByNameOrIPAddress(command.params[1]);
                     List<List<InformationSystemHost>> attackerPath = command.getRoutesBetweenHostsOfHacl(topology);
 
                     //For HACL Rules, we can block the packets with firewall rules
@@ -903,17 +917,17 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                     //For all possible path
                     for (List<InformationSystemHost> anAttackerPath1 : attackerPath) {
 
-                        remediation = new RemediationAction(ActionType.DEPLOY_FIREWALL_RULE, costParametersFolder);
+                        FirewallRemediationAction remediation = new FirewallRemediationAction(costParametersFolder);
                         remediation.setRelatedVertex(leaf);
                         if (command.params[0].equals("internet")) {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), new IPAddress("0.0.0.0"), new IPAddress("0.0.0.0"), new PortRange(true), to.getFirstIPAddress(), new IPAddress("255.255.255.255"), PortRange.fromString(command.params[3]), Table.INPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         } else if (command.params[1].equals("internet")) {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), from.getFirstIPAddress(), new IPAddress("255.255.255.255"), new PortRange(true), new IPAddress("0.0.0.0"), new IPAddress("0.0.0.0"), PortRange.fromString(command.params[3]), Table.INPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         } else {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), from.getFirstIPAddress(), new IPAddress("255.255.255.255"), new PortRange(true), to.getFirstIPAddress(), new IPAddress("255.255.255.255"), PortRange.fromString(command.params[3]), Table.INPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         }
                         //The only thing that change between INPUT and OUTPUT is the machines on which this rule can be deployed
                         for (InformationSystemHost currentAttackerPathHost : anAttackerPath1) {
@@ -938,17 +952,17 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                     //For all possible path
                     for (List<InformationSystemHost> anAttackerPath : attackerPath) {
 
-                        remediation = new RemediationAction(ActionType.DEPLOY_FIREWALL_RULE, costParametersFolder);
+                        FirewallRemediationAction remediation = new FirewallRemediationAction(costParametersFolder);
                         remediation.setRelatedVertex(leaf);
                         if (command.params[0].equals("internet")) {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), new IPAddress("0.0.0.0"), new IPAddress("0.0.0.0"), new PortRange(true), to.getFirstIPAddress(), new IPAddress("255.255.255.255"), PortRange.fromString(command.params[3]), Table.OUTPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         } else if (command.params[1].equals("internet")) {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), from.getFirstIPAddress(), new IPAddress("255.255.255.255"), new PortRange(true), new IPAddress("0.0.0.0"), new IPAddress("0.0.0.0"), PortRange.fromString(command.params[3]), Table.OUTPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         } else {
                             FirewallRule fwRule = new FirewallRule(Action.DROP, Protocol.getProtocolFromString(command.params[2]), from.getFirstIPAddress(), new IPAddress("255.255.255.255"), new PortRange(true), to.getFirstIPAddress(), new IPAddress("255.255.255.255"), PortRange.fromString(command.params[3]), Table.OUTPUT);
-                            remediation.getRemediationParameters().add(fwRule);
+                            remediation.rule = fwRule;
                         }
 
                         //The only thing that change between INPUT and OUTPUT is the machines on which this rule can be deployed
@@ -971,39 +985,41 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
                 }
                 case "vmOnHost":
                 {
-                	List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
-                    RemediationAction rem = new RemediationAction(ActionType.MOVE_VM, costParametersFolder);
+                    List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
+                    String vm         = command.params[0];
+                    String hypervisor = command.params[1];
+                    MoveVmRemediationAction rem = new MoveVmRemediationAction(vm,hypervisor,costParametersFolder);
                     rem.setRelatedVertex(leaf);
-                    rem.getRemediationParameters().add(command.params[0]);  // the VM
-                    rem.getRemediationParameters().add(command.params[1]);  // hypervisor to remove the VM from
+
                     List<String> forbidden_hosts = new ArrayList<String>();
-                    forbidden_hosts.add(command.params[1]);  // cannot move the VM to the same hypervisor 
+                    forbidden_hosts.add(rem.hypervisor);  // cannot move the VM to the same hypervisor 
                     rem.setPossibleMachines(this.getNotVulnerableHosts(topology.getTopology(), forbidden_hosts));  // all new possible hypervisors
                     moveVM.add(rem);
                     result.add(moveVM);
-                	break;
+                    break;
                 }
                 	
                 case "vmInDomain":
                 {
-                	List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
-                    RemediationAction rem = new RemediationAction(ActionType.MOVE_VM_DOMAIN, costParametersFolder);
+                    List<RemediationAction> moveVM = new ArrayList<RemediationAction>();
+                    String vm         = command.params[0];
+                    String domain     = command.params[1];
+                    MoveVmDomainRemediationAction rem = new MoveVmDomainRemediationAction(vm,domain,costParametersFolder);
                     rem.setRelatedVertex(leaf);
-                    rem.getRemediationParameters().add(command.params[0]);  // the machine
-                    rem.getRemediationParameters().add(command.params[1]);  // domain to remove the machine from
+
                     moveVM.add(rem);
                     result.add(moveVM);
-                	break;
+                    break;
                 }
                 
                 default :
                 {
-                	System.out.println("Leaf has non-remediable command : " + command.command);
+                	Logger.getAnonymousLogger().log( Level.INFO, "Leaf has non-remediable command : " + command.command);
                 }
             }
         }
-        return result;
 
+        return result;
     }
 
     /**
@@ -1130,44 +1146,65 @@ public class AttackPath extends MulvalAttackGraph implements Cloneable {
      * @return true if the leaves are mandatory / else false
      * @return true if cutting all the leaves is enough to cut attack path to vertex
      */
-    private boolean leavesMandatoryForVertex(List<Vertex> leaves, Vertex v, List<Vertex> alreadySeen)
+    private boolean leavesMandatoryForVertex( List<Vertex> leaves, Vertex v, List<Vertex> alreadySeen )
     {
-    	if (v.fact != null && v.fact.datalogCommand != null && v.fact.datalogCommand.command != null && (v.fact.datalogCommand.command.contains("attackerLocated") || v.fact.datalogCommand.command.contains("isInVlan") || v.fact.datalogCommand.command.contains("vulProperty")))
-    		return true;  // if vertex is attackerLocated, isInVlan or vulProperty, it is not remediable, so out of the scope of the remediation : any leaves set is OK
+	Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ")" );
+
+	// vertex of type attackerLocated, isInVlan or vulProperty is not remediable
+	// so out of the scope of the remediation
+	// => any leaves set is OK
+	if( ! v.isRemediable() )
+	{
+		Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ") = true (not remediable)" );
+		return true; 
+	}
+
         if (leaves.contains(v))
-            return true;
-        else if (v.type == VertexType.AND)
+	{
+		Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ") = true (in leaves)" );
+		return true;
+	}
+
+        if (v.type == VertexType.AND)
         {
             boolean result = false;
             v.computeParentsAndChildren(this);
             alreadySeen.add(v);
-            for (int i = 0; i < v.parents.size(); i++)
+            
+            for( Vertex parent : v.parents )
             {
-                Vertex parent = v.parents.get(i);
-                if (!alreadySeen.contains(parent))
+                if( !alreadySeen.contains(parent) )
+		{
                     result = result || leavesMandatoryForVertex(leaves, parent, alreadySeen);
+		}
             }
+
             alreadySeen.remove(v);
+	    Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ") = " + result + " (AND)" );
             return result;
         }
-        else if (v.type == VertexType.OR)
+
+        if (v.type == VertexType.OR)
         {
             boolean result = true;
             v.computeParentsAndChildren(this);
             alreadySeen.add(v);
-            for (int i = 0; i < v.parents.size(); i++)
+
+            for( Vertex parent : v.parents )
             {
-                Vertex parent = v.parents.get(i);
-                if (!alreadySeen.contains(parent))
+                if( !alreadySeen.contains(parent))
+		{
                     result = result && leavesMandatoryForVertex(leaves, parent, alreadySeen);
+		}
             }
+
             alreadySeen.remove(v);
+	    Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ") = " + result + " (OR)" );
             return result;
         }
-        else
-        {
-            return false;
-        }
+
+        Logger.getAnonymousLogger().log( Level.INFO, "leavesMandatoryForVertex(" + v + ") = false (default )" );
+	return false;
     }
 
     /**

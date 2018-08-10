@@ -41,7 +41,7 @@ public class SerializableDeployableRemediation implements Serializable {
 
     public SerializableDeployableRemediation(DeployableRemediation deployableRemediation) {
         for (DeployableRemediationAction action : deployableRemediation.getActions()) {
-            this.actions.add(new SerializableDeployableRemediationAction(action));
+            this.actions.add(action.makeSerializableDeployableRemediationAction());
         }
     }
 

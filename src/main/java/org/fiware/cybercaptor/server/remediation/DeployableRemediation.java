@@ -80,8 +80,8 @@ public class DeployableRemediation {
      */
     public double computeCost() throws Exception {
         if (getCost() == 0) {
-            for (int i = 0; i < getActions().size(); i++) {
-                setCost(getCost() + getActions().get(i).getRemediationAction().getOperationalCost());
+            for ( DeployableRemediationAction action : actions ) {
+                setCost(getCost() + action.getRemediationAction().getOperationalCost());
             }
         }
         return getCost();
@@ -106,8 +106,7 @@ public class DeployableRemediation {
         //actions
         Element actionsElement = new Element("remediation_actions");
         root.addContent(actionsElement);
-        for (int i = 0; i < getActions().size(); i++) {
-            DeployableRemediationAction action = getActions().get(i);
+        for (DeployableRemediationAction action : getActions()) {
 
             actionsElement.addContent(action.toXMLElement());
         }

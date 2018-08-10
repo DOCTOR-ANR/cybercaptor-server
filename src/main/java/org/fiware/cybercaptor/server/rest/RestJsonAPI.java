@@ -33,6 +33,7 @@ import org.fiware.cybercaptor.server.informationsystem.InformationSystem;
 import org.fiware.cybercaptor.server.monitoring.Monitoring;
 import org.fiware.cybercaptor.server.properties.ProjectProperties;
 import org.fiware.cybercaptor.server.remediation.DeployableRemediation;
+import org.fiware.cybercaptor.server.remediation.DeployableRemediationAction;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -146,32 +147,45 @@ public class RestJsonAPI {
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_JSON)
     public Response initializeFromXMLText(@Context HttpServletRequest request, String xmlString) throws Exception {
+
         String costParametersFolderPath = ProjectProperties.getProperty("cost-parameters-path");
         String databasePath = ProjectProperties.getProperty("database-path");
 
         if (xmlString == null || xmlString.isEmpty())
             return RestApplication.returnErrorMessage(request, "The input text string is empty.");
 
+	//                    -----------------------------------------
+
         Logger.getAnonymousLogger().log(Level.INFO, "Load the vulnerability and remediation database");
         Database database = new Database(databasePath);
 
-        String topologyFilePath = ProjectProperties.getProperty("topology-path");
+	//                    -----------------------------------------
 
+        String topologyFilePath = ProjectProperties.getProperty("topology-path");
         Logger.getAnonymousLogger().log(Level.INFO, "Storing topology in " + topologyFilePath);
         PrintWriter out = new PrintWriter(topologyFilePath);
         out.print(xmlString);
         out.close();
 
+	//                    -----------------------------------------
+
         Logger.getAnonymousLogger().log(Level.INFO, "Loading topology " + topologyFilePath);
 
         InformationSystem informationSystem = InformationSystemManagement.loadTopologyXMLFile(topologyFilePath, database);
         
+	//                    -----------------------------------------
+
         AttackGraph attackGraph = InformationSystemManagement.prepareInputsAndExecuteMulVal(informationSystem);
         
-        if (attackGraph == null)
+        if (attackGraph == null) {
             return RestApplication.returnErrorMessage(request, "the attack graph is empty");
-        Logger.getAnonymousLogger().log(Level.INFO, "Launch scoring function");
+	}
+
+	//                    -----------------------------------------
+
         attackGraph.loadMetricsFromTopology(informationSystem);
+
+        Logger.getAnonymousLogger().log(Level.INFO, "Launch scoring function #" + attackGraph.getNumberOfVertices());
         
         List<AttackPath> attackPaths = AttackPathManagement.scoreAttackPaths(attackGraph, attackGraph.getNumberOfVertices());
         
@@ -182,9 +196,15 @@ public class RestJsonAPI {
                 attackPathToKeep.add(attackPath);
             }
         }
+
+        Logger.getAnonymousLogger().log(Level.INFO, attackPaths.size() + " attack paths initially scored");
+
         attackPaths = attackPathToKeep;
 
-        Logger.getAnonymousLogger().log(Level.INFO, attackPaths.size() + " attack paths scored");
+        Logger.getAnonymousLogger().log(Level.INFO, attackPaths.size() + " attack paths really scored");
+
+	//                    -----------------------------------------
+
         Monitoring monitoring = new Monitoring(costParametersFolderPath);
         monitoring.setAttackPathList(attackPaths);
         monitoring.setInformationSystem(informationSystem);
@@ -235,15 +255,16 @@ public class RestJsonAPI {
     @Path("/topology")
     @Produces(MediaType.APPLICATION_XML)
     public Response getTopology(@Context HttpServletRequest request) {
+
         Monitoring monitoring = global_monitoring;
 
         if (monitoring == null) {
-            return Response.ok("The monitoring object is empty. Did you forget to " +
-                    "initialize it ?").build();
+
+		return Response.ok("The monitoring object is empty. Did you forget to " + "initialize it ?").build();
         }
         try
         {
-        	return Response.ok(new XMLOutputter(Format.getPrettyFormat()).outputString(monitoring.getInformationSystem().toDomXMLElement())).build();
+		return Response.ok(new XMLOutputter(Format.getPrettyFormat()).outputString(monitoring.getInformationSystem().toDomXMLElement())).build();
         }
         catch (Exception e)
         {
@@ -274,6 +295,7 @@ public class RestJsonAPI {
     @OPTIONS
     @Path("/host/list")
     public Response setHostListOptions(@Context HttpServletRequest request) {
+
         return RestApplication.returnJsonObject(request, new JSONObject());
     }
 
@@ -424,13 +446,11 @@ public class RestJsonAPI {
     	Database db = global_db;
 
         if (monitoring == null) {
-            return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
-                    "initialize it ?");
+            return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to initialize it ?");
         }
 
         if (db == null) {
-            return RestApplication.returnErrorMessage(request, "The database object is empty. Did you forget to " +
-                    "initialize it ?");
+            return RestApplication.returnErrorMessage(request, "The database object is empty. Did you forget to initialize it ?");
         }
 
         int numberAttackPaths = monitoring.getAttackPathList().size();
@@ -441,6 +461,7 @@ public class RestJsonAPI {
                     (numberAttackPaths - 1) + ")");
         }
 
+        Logger.getAnonymousLogger().log(Level.INFO, "getAttackPathRemediations(" + id + ")" );
         Element remediationXML = AttackPathManagement.getRemediationXML(monitoring, id, db);
         XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
 
@@ -459,8 +480,9 @@ public class RestJsonAPI {
     @Path("attack_path/{id}/remediation/{id-remediation}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response simulateRemediationInAttackGraph(@Context HttpServletRequest request, @PathParam("id") int id, @PathParam("id-remediation") int id_remediation) throws Exception {
+
     	Monitoring monitoring = global_monitoring;
-    	Database db = global_db;
+    	Database   db         = global_db;
 
         if (monitoring == null) {
             return RestApplication.returnErrorMessage(request, "The monitoring object is empty. Did you forget to " +
@@ -496,8 +518,8 @@ public class RestJsonAPI {
         try {
             simulatedAttackGraph = monitoring.getAttackGraph().clone();
 
-            for (int i = 0; i < deployableRemediation.getActions().size(); i++) {
-                Vertex vertexToDelete = deployableRemediation.getActions().get(i).getRemediationAction().getRelatedVertex();
+            for ( DeployableRemediationAction deployableRemediationAction : deployableRemediation.getActions()) {
+                Vertex vertexToDelete = deployableRemediationAction.getRemediationAction().getRelatedVertex();
                 simulatedAttackGraph.deleteVertex(simulatedAttackGraph.vertices.get(vertexToDelete.id));
             }
 

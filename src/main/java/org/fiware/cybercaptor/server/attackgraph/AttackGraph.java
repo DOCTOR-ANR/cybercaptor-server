@@ -54,7 +54,7 @@ public class AttackGraph implements Cloneable {
     /**
      * A list of arcs between the vertices
      */
-    public ArrayList<Arc> arcs = new ArrayList<Arc>();
+    protected ArrayList<Arc> arcs = new ArrayList<Arc>();
 
     /**
      * The global score of the attack graph
@@ -91,9 +91,13 @@ public class AttackGraph implements Cloneable {
      * @throws Exception
      */
     public Vertex getVertexFromId(int id) throws Exception {
+
         Vertex vertex = this.vertices.get(id);
-        if (vertex == null)
+
+        if (vertex == null) {
             throw new Exception("The vertex " + id + " is not in this attack graph");
+	}
+
         return vertex;
     }
 
@@ -104,6 +108,7 @@ public class AttackGraph implements Cloneable {
      * @throws Exception
      */
     public void deleteVertex(Vertex vertex) throws Exception {
+
         if (!this.vertices.containsKey(vertex.id)) //If the vertex has already been deleted
             return;
 
@@ -137,11 +142,9 @@ public class AttackGraph implements Cloneable {
             }
 
             deleteArc(parent, vertex);
-
-
         }
 
-        this.deleteUnreachableVertices();
+        deleteUnreachableVertices();
     }
 
     /**
@@ -162,9 +165,7 @@ public class AttackGraph implements Cloneable {
     /**
      * @return the number of vertices in the attack graph
      */
-    public int getNumberOfVertices() {
-        return this.vertices.size();
-    }
+    public int getNumberOfVertices() { return vertices.size(); }
 
     /**
      * @param vuln a vulnerability
@@ -295,17 +296,22 @@ public class AttackGraph implements Cloneable {
      *
      * @throws Exception
      */
-    public void deleteUnreachableVertices() throws Exception {
+    protected void deleteUnreachableVertices() throws Exception {
+
         List<Vertex> toDelete = new ArrayList<Vertex>();
+
         for (int i : vertices.keySet()) {
             List<Vertex> leaves = getMinimumPrerequisiteLeavesTo(vertices.get(i));
-            if (leaves.size() == 0)
+            if (leaves.size() == 0) {
                 toDelete.add(vertices.get(i));
+	    }
         }
+
         if (toDelete.size() > 0) {
             for (Vertex aToDelete : toDelete) {
-                this.deleteVertex(aToDelete);
+                deleteVertex(aToDelete);
             }
+	    // recursive call ?
             deleteUnreachableVertices();
         }
     }
@@ -410,8 +416,18 @@ public class AttackGraph implements Cloneable {
             Fact fact = vertex.fact;
             if (fact != null && fact.type == FactType.DATALOG_FACT) {
                 DatalogCommand command = fact.datalogCommand;
-                if (command != null && (command.command.equals("execCode") || command.command.equals("accessFile") || command.command.equals("principalCompromised"))) {
-                    attackerGoals.add(vertex);
+                if (command != null ) {
+			switch( command.command ) {
+				case "execCode":
+				case "accessFile":
+				case "principalCompromised": 
+				case "ndnOutputCompromised": 
+				case "ndnTrafficIntercepted": 
+				{
+					attackerGoals.add(vertex);
+					break;
+				}
+			}
                 }
             }
         }
@@ -578,25 +594,28 @@ public class AttackGraph implements Cloneable {
      * @throws Exception
      */
     public List<AttackPath> scoreAttackGraphAndGetAttackPaths(String outputPath, double previousMaxScore) throws Exception {
-        double[] vertexIDTable = new double[this.getNumberOfVertices()];
-        String[] vertexFactTable = new String[this.getNumberOfVertices()];
-        double[] vertexMulvalMetricTable = new double[this.getNumberOfVertices()];
-        String[] vertexTypeTable = new String[this.getNumberOfVertices()];
 
-        double[] arcSrcTable = new double[this.arcs.size()];
-        double[] arcDstTable = new double[this.arcs.size()];
-        ImpactMetric[][] impactMetrics = new ImpactMetric[this.getNumberOfVertices()][];
+        double[] vertexIDTable           = new double[this.getNumberOfVertices()];
+        String[] vertexFactTable         = new String[this.getNumberOfVertices()];
+        double[] vertexMulvalMetricTable = new double[this.getNumberOfVertices()];
+        String[] vertexTypeTable         = new String[this.getNumberOfVertices()];
+
+        double[] arcSrcTable             = new double[this.arcs.size()];
+        double[] arcDstTable             = new double[this.arcs.size()];
+        ImpactMetric[][] impactMetrics   = new ImpactMetric[this.getNumberOfVertices()][];
 
         int i = 0;
         System.out.println("Generate input for scoring function");
         for (Integer key : this.vertices.keySet()) {
+
             Vertex vertex = this.vertices.get(key);
 
-            vertexIDTable[i] = vertex.id;
-            vertexFactTable[i] = vertex.fact.factString;
+            vertexIDTable[i]           = vertex.id;
+            vertexFactTable[i]         = vertex.fact.factString;
             vertexMulvalMetricTable[i] = vertex.mulvalMetric;
-            vertexTypeTable[i] = vertex.type.toString().toUpperCase();
-            impactMetrics[i] = new ImpactMetric[vertex.impactMetrics.size()];
+            vertexTypeTable[i]         = vertex.type.toString().toUpperCase();
+            impactMetrics[i]           = new ImpactMetric[vertex.impactMetrics.size()];
+
             for(int j = 0; j < vertex.impactMetrics.size() ; j++) {
                 impactMetrics[i][j] = vertex.impactMetrics.get(j);
             }
@@ -606,12 +625,14 @@ public class AttackGraph implements Cloneable {
 
         for (int j = 0; j < this.arcs.size(); j++) {
             Arc arc = this.arcs.get(j);
+
             arcDstTable[j] = arc.source.id;
             arcSrcTable[j] = arc.destination.id;
         }
         System.out.println("Compute global score and compute attack paths");
         this.globalScore = Launch.main(vertexIDTable, vertexFactTable, vertexMulvalMetricTable, vertexTypeTable,
                 arcSrcTable, arcDstTable, impactMetrics, outputPath, previousMaxScore);
+
         return AttackPath.loadAttackPathsFromFile(outputPath, this);
     }
 
@@ -644,7 +665,9 @@ public class AttackGraph implements Cloneable {
      * @return the security requirements impacted by this attack path
      * @throws Exception
      */
-    public List<SecurityRequirement> computeRelatedImactedSecurityRequirements(InformationSystem is) throws Exception {
+
+    /*
+    protected List<SecurityRequirement> computeRelatedImpactedSecurityRequirements(InformationSystem is) throws Exception {
         List<SecurityRequirement> impactedRequirements = new ArrayList<SecurityRequirement>();
 
         for (int i : this.vertices.keySet()) {
@@ -670,6 +693,7 @@ public class AttackGraph implements Cloneable {
         return impactedRequirements;
 
     }
+    */
 
     /**
      * @param informationSystem the information system

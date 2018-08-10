@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.fiware.cybercaptor.server.scoring.types.Arc;
 import org.fiware.cybercaptor.server.scoring.types.Graph;
@@ -91,10 +93,11 @@ public class AttackPaths {
             {
             	nbcalls = 0;
                 GraphTable[i] = exploreAttackPath2(Targets[i], null, AttackGraph);
-                System.out.println("explored path " + i + " (" + nbcalls + " calls, target = '" + Targets[i].getFact() + "')");
+
+		Logger.getAnonymousLogger().log(Level.CONFIG, "explored path " + i + " (" + nbcalls + " calls, target = '" + Targets[i].getFact() + "')");
             }
-            System.out.println("Merge time : " + mergeTime + "ms");
-            System.out.println("Init time : " + e2InitTime + "ms");
+ 	    Logger.getAnonymousLogger().log(Level.CONFIG, "Merge time : " + mergeTime + "ms");
+	    Logger.getAnonymousLogger().log(Level.CONFIG, "Init time : " + e2InitTime + "ms");
             return GraphTable;
         } else {
             return null;

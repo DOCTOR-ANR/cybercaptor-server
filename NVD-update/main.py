@@ -149,108 +149,110 @@ def add_file_to_database(file_path, db_cursor):
     }
 
     for entry in root.findall("xmlns:entry", namespaces=namespaces):
-        assert isinstance(entry, Element)
-        # CVE
-        cve = entry.attrib['id']
-        description = entry.find('vuln:summary', namespaces=namespaces).text
+        try:
+            assert isinstance(entry, Element)
+            # CVE
+            cve = entry.attrib['id']
+            description = entry.find('vuln:summary', namespaces=namespaces).text
 
-        # add to db
-        db_cursor.execute("SELECT id FROM vulnerability WHERE cve=?", (cve,))
-        res = db_cursor.fetchone()
-        already_in_db = (res != None)
-        if not already_in_db:
-            logging.debug("Adding the vulnerability " + cve + " to the database.")
-            # We add the vulnerability to the database, else, we pass everything else for this vulnerability.
+            # add to db
+            db_cursor.execute("SELECT id FROM vulnerability WHERE cve=?", (cve,))
+            res = db_cursor.fetchone()
+            already_in_db = (res != None)
+            if not already_in_db:
+                logging.debug("Adding the vulnerability " + cve + " to the database.")
+                # We add the vulnerability to the database, else, we pass everything else for this vulnerability.
 
-            # First, we add the CVSS
-            cvss = entry.find('vuln:cvss', namespaces=namespaces)
-            if cvss:
-                base_metrics = cvss.find('cvss:base_metrics', namespaces=namespaces)
-                if base_metrics:
-                    score = base_metrics.find('cvss:score', namespaces=namespaces).text
-                    access_vector = base_metrics.find('cvss:access-vector', namespaces=namespaces).text
-                    access_complexity = base_metrics.find('cvss:access-complexity', namespaces=namespaces).text
-                    authentication = base_metrics.find('cvss:authentication', namespaces=namespaces).text
-                    confidentiality_impact = base_metrics.find('cvss:confidentiality-impact',
-                                                               namespaces=namespaces).text
-                    integrity_impact = base_metrics.find('cvss:integrity-impact', namespaces=namespaces).text
-                    availability_impact = base_metrics.find('cvss:availability-impact', namespaces=namespaces).text
+                # First, we add the CVSS
+                cvss = entry.find('vuln:cvss', namespaces=namespaces)
+                if cvss:
+                    base_metrics = cvss.find('cvss:base_metrics', namespaces=namespaces)
+                    if base_metrics:
+                        score = base_metrics.find('cvss:score', namespaces=namespaces).text
+                        access_vector = base_metrics.find('cvss:access-vector', namespaces=namespaces).text
+                        access_complexity = base_metrics.find('cvss:access-complexity', namespaces=namespaces).text
+                        authentication = base_metrics.find('cvss:authentication', namespaces=namespaces).text
+                        confidentiality_impact = base_metrics.find('cvss:confidentiality-impact',
+                                                                   namespaces=namespaces).text
+                        integrity_impact = base_metrics.find('cvss:integrity-impact', namespaces=namespaces).text
+                        availability_impact = base_metrics.find('cvss:availability-impact', namespaces=namespaces).text
 
-            db_cursor.execute(
-                "INSERT INTO cvss (score, access_vector, access_complexity , authentication, confidentiality_impact, integrity_impact, availability_impact) VALUES (?,?,?,?,?,?,?)",
-                (score, access_vector, access_complexity, authentication, confidentiality_impact, integrity_impact,
-                 availability_impact))
-            id_cvss = db_cursor.lastrowid
+                db_cursor.execute(
+                    "INSERT INTO cvss (score, access_vector, access_complexity , authentication, confidentiality_impact, integrity_impact, availability_impact) VALUES (?,?,?,?,?,?,?)",
+                    (score, access_vector, access_complexity, authentication, confidentiality_impact, integrity_impact,
+                     availability_impact))
+                id_cvss = db_cursor.lastrowid
 
-            db_cursor.execute("INSERT INTO vulnerability (cve, description, cvss_id) VALUES (?,?,?)",
-                                  (cve, description, id_cvss))
-            id_vulnerability = db_cursor.lastrowid
+                db_cursor.execute("INSERT INTO vulnerability (cve, description, cvss_id) VALUES (?,?,?)",
+                                      (cve, description, id_cvss))
+                id_vulnerability = db_cursor.lastrowid
 
-            # For the vulnerability, add all the PATCHES
-            for vuln_reference in entry.findall('vuln:references', namespaces=namespaces):
-                if vuln_reference.attrib['reference_type'] == "PATCH":
-                    patch = vuln_reference.find('vuln:reference', namespaces=namespaces)
-                    patch_link = patch.attrib['href']
-                    patch_description = patch.text
+                # For the vulnerability, add all the PATCHES
+                for vuln_reference in entry.findall('vuln:references', namespaces=namespaces):
+                    if vuln_reference.attrib['reference_type'] == "PATCH":
+                        patch = vuln_reference.find('vuln:reference', namespaces=namespaces)
+                        patch_link = patch.attrib['href']
+                        patch_description = patch.text
 
-                    # Search if the patch is already in the database
-                    db_cursor.execute("SELECT id FROM patchs WHERE link=?", (patch_link,))
-                    res = db_cursor.fetchone()
-                    already_in_db = (res is not None )
-                    if not already_in_db:
-                        # insert the patch
-                        db_cursor.execute("INSERT INTO patchs (link, description) VALUES (?,?)",
-                                          (patch_link, patch_description))
+                        # Search if the patch is already in the database
+                        db_cursor.execute("SELECT id FROM patchs WHERE link=?", (patch_link,))
+                        res = db_cursor.fetchone()
+                        already_in_db = (res is not None )
+                        if not already_in_db:
+                            # insert the patch
+                            db_cursor.execute("INSERT INTO patchs (link, description) VALUES (?,?)",
+                                              (patch_link, patch_description))
 
-                        id_patch = db_cursor.lastrowid
+                            id_patch = db_cursor.lastrowid
 
-                        db_cursor.execute("INSERT INTO patchs_vulnerability (id_patch, id_vulnerability) VALUES (?,?)",
-                                          (id_patch, id_vulnerability))
-                    else:
-                        # the patch is already in the database
-                        id_patch = res[0]
-                        db_cursor.execute("REPLACE INTO patchs_vulnerability (id_patch, id_vulnerability) VALUES (?,?)",
-                                          (id_patch, id_vulnerability))
+                            db_cursor.execute("INSERT INTO patchs_vulnerability (id_patch, id_vulnerability) VALUES (?,?)",
+                                              (id_patch, id_vulnerability))
+                        else:
+                            # the patch is already in the database
+                            id_patch = res[0]
+                            db_cursor.execute("REPLACE INTO patchs_vulnerability (id_patch, id_vulnerability) VALUES (?,?)",
+                                              (id_patch, id_vulnerability))
 
-            # Add the CPE related to this vulnerability
-            vuln_soft = entry.find('vuln:vulnerable-software-list', namespaces=namespaces)
-            if vuln_soft:
-                for product in vuln_soft.findall('vuln:product', namespaces=namespaces):
-                    cpe = product.text
+                # Add the CPE related to this vulnerability
+                vuln_soft = entry.find('vuln:vulnerable-software-list', namespaces=namespaces)
+                if vuln_soft:
+                    for product in vuln_soft.findall('vuln:product', namespaces=namespaces):
+                        cpe = product.text
 
-                    # Search if the cpe is already in the database
-                    db_cursor.execute("SELECT id FROM cpe WHERE cpe_id=?", (cpe,))
-                    res = db_cursor.fetchone()
-                    already_in_db = res is not None
-                    if not already_in_db:
-                        # insert the cpe
-                        db_cursor.execute("INSERT INTO cpe (cpe_id) VALUES (?)",
-                                          (cpe,))
+                        # Search if the cpe is already in the database
+                        db_cursor.execute("SELECT id FROM cpe WHERE cpe_id=?", (cpe,))
+                        res = db_cursor.fetchone()
+                        already_in_db = res is not None
+                        if not already_in_db:
+                            # insert the cpe
+                            db_cursor.execute("INSERT INTO cpe (cpe_id) VALUES (?)",
+                                              (cpe,))
 
-                        id_cpe = db_cursor.lastrowid
+                            id_cpe = db_cursor.lastrowid
 
-                        db_cursor.execute("INSERT INTO cpe_vulnerability (id_cpe, id_vulnerability) VALUES (?,?)",
-                                          (id_cpe, id_vulnerability))
-                    else:
-                        # the patch is already in the database
-                        id_cpe = res[0]
-                        db_cursor.execute("INSERT INTO cpe_vulnerability (id_cpe, id_vulnerability) VALUES (?,?)",
-                                          (id_cpe, id_vulnerability))
+                            db_cursor.execute("INSERT INTO cpe_vulnerability (id_cpe, id_vulnerability) VALUES (?,?)",
+                                              (id_cpe, id_vulnerability))
+                        else:
+                            # the patch is already in the database
+                            id_cpe = res[0]
+                            db_cursor.execute("INSERT INTO cpe_vulnerability (id_cpe, id_vulnerability) VALUES (?,?)",
+                                              (id_cpe, id_vulnerability))
 
-            # Add the CWE related to this vulnerability
+                # Add the CWE related to this vulnerability
 
-            for vuln_cwe in entry.findall('vuln:cwe', namespaces=namespaces):
-                vuln_cwe_id = vuln_cwe.attrib['id']
-                vuln_cwe_id = vuln_cwe_id[4:]
+                for vuln_cwe in entry.findall('vuln:cwe', namespaces=namespaces):
+                    vuln_cwe_id = vuln_cwe.attrib['id']
+                    vuln_cwe_id = vuln_cwe_id[4:]
 
-                if vuln_cwe_id:
-                    db_cursor.execute("REPLACE INTO cwe_vulnerability (id_cwe, id_vulnerability) VALUES (?,?)",
-                                      (vuln_cwe_id, id_vulnerability))
+                    if vuln_cwe_id:
+                        db_cursor.execute("REPLACE INTO cwe_vulnerability (id_cwe, id_vulnerability) VALUES (?,?)",
+                                          (vuln_cwe_id, id_vulnerability))
 
-            number_of_added_vulnerability += 1
-        else:
-            logging.debug("The vulnerability " + cve + " is already in the database.")
-
+                number_of_added_vulnerability += 1
+            else:
+                logging.debug("The vulnerability " + cve + " is already in the database.")
+        except Exception as e:
+            print("Exception caught: " + str(e) )
     logging.info(str(number_of_added_vulnerability) + " vulnerabilities added to the database")
 
 

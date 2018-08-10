@@ -31,6 +31,8 @@ import org.jdom2.Element;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * API Class used to manage attack paths
@@ -138,23 +140,34 @@ public class AttackPathManagement {
      * @return the XML element related to the remediations to the selected attack path contained in the monitoring ojbect
      */
     public static Element getRemediationXML(Monitoring monitoring, Integer id, Database db) {
+
+	Logger.getAnonymousLogger().log( Level.INFO, "getRemediationXML(" + id + ")" );
+
         if (monitoring == null)
             return null;
+
         List<AttackPath> attackPaths = monitoring.getAttackPathList();
         if (id >= 0 && id < attackPaths.size()) {
             AttackPath attackPath = attackPaths.get(id);
+	    Logger.getAnonymousLogger().log( Level.INFO, "attackPath#" + id + " is '" + attackPath.targetString + "'" );
+
             try {
                 List<DeployableRemediation> remediations = attackPath.getDeployableRemediations(monitoring.getInformationSystem(), db.getConn(), monitoring.getPathToCostParametersFolder());
+		Logger.getAnonymousLogger().log( Level.INFO, "remediations nb = " + remediations.size() );
                 Element root = new Element("remediations");
                 for (DeployableRemediation remediation : remediations) {
                     root.addContent(remediation.toXMLElement());
                 }
                 return root;
             } catch (Exception e) {
+        	Logger.getAnonymousLogger().log( Level.INFO, "Error while computing remediations");
                 System.err.println("Error while computing remediations");
                 e.printStackTrace();
             }
         }
+
+        Logger.getAnonymousLogger().log( Level.INFO, "getRemediationXML( " + id + ") returns NULL" );
+
         return null;
     }
 }

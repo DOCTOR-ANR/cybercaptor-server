@@ -20,8 +20,10 @@
  ****************************************************************************************/
 package org.fiware.cybercaptor.server.remediation;
 
+import org.fiware.cybercaptor.server.informationsystem.InformationSystem;
 import org.fiware.cybercaptor.server.informationsystem.InformationSystemHost;
-import org.fiware.cybercaptor.server.topology.asset.component.FirewallRule;
+import org.fiware.cybercaptor.server.database.Database;
+import org.fiware.cybercaptor.server.remediation.serializable.SerializableDeployableRemediationAction ;
 import org.jdom2.Element;
 
 /**
@@ -40,6 +42,8 @@ public class DeployableRemediationAction {
      * The host on which the remediation can be deployed.
      */
     private InformationSystemHost host;
+
+    public DeployableRemediationAction() {}
 
     /**
      * The machine on which the remediation will be deployed
@@ -68,93 +72,31 @@ public class DeployableRemediationAction {
      * @return the dom element corresponding to this deployable remediation action
      */
     public Element toXMLElement() {
+
         Element root = new Element("deployable_remediation");
 
         Element machineElement = new Element("machine");
-        machineElement.setText(this.getHost().getName() + "");
+        machineElement.setText(getHost().getName() + "");
         root.addContent(machineElement);
 
-        //actions
         Element actionElement = new Element("action");
         root.addContent(actionElement);
+
         Element typeElement = new Element("type");
         actionElement.addContent(typeElement);
 
-        switch (getRemediationAction().getActionType()) {
-            case APPLY_PATCH:
-                typeElement.setText("patch");
-                Element patchsElement = new Element("patchs");
-                actionElement.addContent(patchsElement);
-                for (int i = 0; i < getRemediationAction().getRemediationParameters().size(); i++) {
-                    Patch patch = (Patch) getRemediationAction().getRemediationParameters().get(i);
-                    Element patchElement = new Element("patch");
-                    patchElement.setText(patch.getLink());
-                    patchsElement.addContent(patchElement);
-                }
-                break;
-
-            case DEPLOY_FIREWALL_RULE:
-                typeElement.setText("firewall-rule");
-
-                Element fwRuleElement = new Element("rule");
-                actionElement.addContent(fwRuleElement);
-                fwRuleElement.setText(((FirewallRule) getRemediationAction().getRemediationParameters().get(0)).toIptablesAddRule());
-                break;
-
-            case DEPLOY_SNORT_RULE:
-                typeElement.setText("snort-rules");
-
-                Element snortRulesElement = new Element("rules");
-                actionElement.addContent(snortRulesElement);
-
-                for (int i = 0; i < getRemediationAction().getRemediationParameters().size(); i++) {
-                    Rule rule = (Rule) getRemediationAction().getRemediationParameters().get(i);
-
-                    Element snortRuleElement = new Element("rule");
-                    snortRulesElement.addContent(snortRuleElement);
-                    snortRuleElement.setText(rule.getRule());
-
-                }
-                break;
-            
-            case MOVE_VM:
-	            {
-	            	typeElement.setText("move-vm");
-	            	
-	            	Element moveVmElement = new Element("vm-to-move");
-	            	actionElement.addContent(moveVmElement);
-	            	moveVmElement.setText((String)getRemediationAction().getRemediationParameters().get(0));
-	            	Element oldHypervisorElement = new Element("current-vm-hypervisor");
-	            	actionElement.addContent(oldHypervisorElement);
-	            	oldHypervisorElement.setText((String)getRemediationAction().getRemediationParameters().get(1));
-	            	break;
-	            }
-            
-            case MOVE_VM_DOMAIN:
-	            {
-	            	typeElement.setText("move-vm-domain");
-	            	
-	            	Element moveVmElement = new Element("new-domain");
-	            	actionElement.addContent(moveVmElement);
-	            	moveVmElement.setText("unknown");
-	            	break;
-	            }	
-
-            default:
-                typeElement.setText("no-remediation");
-                break;
-        }
+        remediationAction.toXMLElement( actionElement, typeElement );
 
         return root;
     }
+    
+    public SerializableDeployableRemediationAction makeSerializableDeployableRemediationAction() {
 
-    /**
-     * The remediation action
-     *
-     * @return the remediation action
-     */
-    public RemediationAction getRemediationAction() {
-        return remediationAction;
+        return remediationAction.makeSerializableDeployableRemediationAction( getHost() );
+    }
+
+    public void applyOnInformationSystem( InformationSystem informationSystem, Database db ) {
+        remediationAction.applyOnInformationSystem( informationSystem, getHost(), db );
     }
 
     /**
@@ -166,8 +108,18 @@ public class DeployableRemediationAction {
         this.remediationAction = remediationAction;
     }
 
+    /**
+     * The remediation action
+     *
+     * @return the remediation action
+     */
+    public RemediationAction getRemediationAction() {
+        return remediationAction;
+    }
+
     @Override
     public String toString() {
-        return getRemediationAction().getActionType() + " on " + getHost();
+        return remediationAction.toString() + " on " + getHost();
     }
 }
+

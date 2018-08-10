@@ -1,0 +1,7 @@
+
+All patches grouped into a SQL command file.
+The indexes have benn renumerated starting from value 1000000 to avoid having to adapt to 
+regeneration.
+Theorically, we may have index collision, but in practise it is far enough from
+database volumetry, at least in 2018 !
+

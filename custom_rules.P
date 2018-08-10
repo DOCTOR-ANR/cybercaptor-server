@@ -1,0 +1,88 @@
+
+
+interaction_rule(
+        (ndnOutputCompromised( Host, M ) :-
+                hasIP(Host, IP),
+                hasNDNFace(Host, F1),
+                faceIsLinked(F1, F2),
+                hasNDNFace(H2, F2),
+                ndnOutputCompromised( H2, M )),
+        rule_desc('Transitivity', 1.0)).
+
+interaction_rule(
+        (ndnOutputCompromised( Host, M ) :-
+                hasIP(Host, IP),
+                hasNDNFace(Host, F1),
+                faceIsLinked(F2, F1),
+                hasNDNFace(H2, F2),
+                ndnOutputCompromised( H2, M )),
+
+        rule_desc('Transitivity', 1.0)).
+
+
+interaction_rule(
+   (execCode(Host, ndn) :-
+        vulExists(Host, Vuln, 'NFD'),
+        vulProperty(Vuln, Exploit, Consequence ),
+        ndnServiceInfo(Host, 'NFD', User)),
+   rule_desc('NFD is fragile', 1)).
+
+
+interaction_rule(
+        (ndnOutputCompromised( Host, _ ) :-
+                hasIP(Host, IP),
+                networkServiceInfo(IP, Software, Protocol, Port, _),
+                isIGWSoftware(Software)),
+        rule_desc('Attacker can cross IGW from IP to NDN domain', 1.0)).
+
+
+interaction_rule(
+        (isIGWSoftware( 'igw-daemon' )),
+        rule_desc('IGW has to run igw-daemon', 1.0)).
+
+
+vulProperty('NDN-2017-0001', signatureExploit, cachePoisonned).
+vulProperty('NDN-2017-0002', pitExploit,       cachePoisonned).
+vulProperty('NDN-2017-0003', fibExploit,       corruptFib).
+vulProperty('NDN-2017-0004', remoteExploit,    privEscalation).
+
+vulExists('ndn1', 'NDN-2017-0001', 'NFD').
+vulExists('ndn1', 'NDN-2017-0002', 'NFD').
+vulExists('ndn1', 'NDN-2017-0003', 'NFD').
+vulExists('ndn1', 'NDN-2017-0004', 'NFD').
+
+vulExists('ndn2', 'NDN-2017-0001', 'NFD').
+vulExists('ndn2', 'NDN-2017-0002', 'NFD').
+vulExists('ndn2', 'NDN-2017-0003', 'NFD').
+vulExists('ndn2', 'NDN-2017-0004', 'NFD').
+
+vulExists('ndn3', 'NDN-2017-0001', 'NFD').
+vulExists('ndn3', 'NDN-2017-0002', 'NFD').
+vulExists('ndn3', 'NDN-2017-0003', 'NFD').
+vulExists('ndn3', 'NDN-2017-0004', 'NFD').
+
+vulExists('ndn4', 'NDN-2017-0001', 'NFD').
+vulExists('ndn4', 'NDN-2017-0002', 'NFD').
+vulExists('ndn4', 'NDN-2017-0003', 'NFD').
+vulExists('ndn4', 'NDN-2017-0004', 'NFD').
+
+vulExists('ndn5', 'NDN-2017-0001', 'NFD').
+vulExists('ndn5', 'NDN-2017-0002', 'NFD').
+vulExists('ndn5', 'NDN-2017-0003', 'NFD').
+vulExists('ndn5', 'NDN-2017-0004', 'NFD').
+
+vulExists('ndn6', 'NDN-2017-0001', 'NFD').
+vulExists('ndn6', 'NDN-2017-0002', 'NFD').
+vulExists('ndn6', 'NDN-2017-0003', 'NFD').
+vulExists('ndn6', 'NDN-2017-0004', 'NFD').
+
+vulExists('igw', 'NDN-2017-0001', 'NFD').
+vulExists('igw', 'NDN-2017-0002', 'NFD').
+vulExists('igw', 'NDN-2017-0003', 'NFD').
+vulExists('igw', 'NDN-2017-0004', 'NFD').
+
+vulExists('egw', 'NDN-2017-0001', 'NFD').
+vulExists('egw', 'NDN-2017-0002', 'NFD').
+vulExists('egw', 'NDN-2017-0003', 'NFD').
+vulExists('egw', 'NDN-2017-0004', 'NFD').
+

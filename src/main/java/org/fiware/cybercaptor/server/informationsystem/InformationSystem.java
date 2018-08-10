@@ -47,6 +47,8 @@ import org.json.JSONObject;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 
 //TODO: check if some functions are not already defined in the topology.
@@ -107,6 +109,9 @@ public class InformationSystem implements Cloneable {
      * @throws Exception
      */
     public void exportToMulvalDatalogFile(String mulvalFilePath) throws Exception {
+
+	Set<String> vulPropSet = new HashSet<String>();
+
         PrintWriter fichier = new PrintWriter(new BufferedWriter(new FileWriter(mulvalFilePath)));
 
         //Add internet
@@ -176,18 +181,8 @@ public class InformationSystem implements Cloneable {
 
                 for (String cve : service.getVulnerabilities().keySet()) {
                     Vulnerability vulnerability = service.getVulnerabilities().get(cve);
-                    fichier.println("vulProperty('" + vulnerability.cve + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
+                    vulPropSet.add("vulProperty('" + vulnerability.cve + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
                     fichier.println("vulExists('" + host.getName() + "', '" + vulnerability.cve + "', '" + service.getName() + "').");
-                    //fichier.println("vulExists('" + host.getName() + "', '" + vulnerability.cve + "', '" + service.getName() + "', " + vulnerability.exploitType + ", " + vulnerability.exploitGoal + ").");
-                    /*if (vulnerability.cvss != null && vulnerability.cvss.getScore() >= 6.6) {
-                        fichier.println("cvss('" + vulnerability.cve + "',h).");
-                    } else if (vulnerability.cvss != null && vulnerability.cvss.getScore() >= 3.3) {
-                        fichier.println("cvss('" + vulnerability.cve + "',m).");
-                    } else if (vulnerability.cvss != null && vulnerability.cvss.getScore() > 0) {
-                        fichier.println("cvss('" + vulnerability.cve + "',l).");
-                    } else {
-                        fichier.println("cvss('" + vulnerability.cve + "',m).");
-                    }*/
                 }
             }
             String vnfMngrId = host.getVnfManagerId();
@@ -200,6 +195,12 @@ public class InformationSystem implements Cloneable {
             fichier.println();
 
         }
+
+	fichier.println("\n\n/****\n *** Vul Properties\n ***/");
+	for( String vulProp : vulPropSet ) {
+	    fichier.println(vulProp);
+	}
+	fichier.println("\n");
 
         //Add flow matrix elements
         if (this.flowMatrix != null && this.flowMatrix.getFlowMatrixLines().size() > 0) {
@@ -318,7 +319,18 @@ public class InformationSystem implements Cloneable {
         	fichier.println("\n\n/****\n *** NDN links\n ***/");
         	for (NDNLink link : this.ndnTopology.getLinks())
         	{
-        		fichier.println("faceIsLinked('" + link.getSource().getHost().getName() + "_" + link.getSource().getName() + "', '" + link.getDestination().getHost().getName() + "_" + link.getDestination().getName() + "').");
+        		fichier.println("ndnLink('" + 
+				link.getSource().getHost().getName() + "', '" + 
+				link.getSource().getHost().getName() + "_" + link.getSource().getName() + "', '" + 
+				link.getDestination().getHost().getName() + "', '" +
+				link.getDestination().getHost().getName() + "_" + link.getDestination().getName() + "')."
+				);
+        		fichier.println("ndnLink('" + 
+				link.getDestination().getHost().getName() + "', '" + 
+				link.getDestination().getHost().getName() + "_" + link.getDestination().getName() + "', '" + 
+				link.getSource().getHost().getName() + "', '" + 
+				link.getSource().getHost().getName() + "_" + link.getSource().getName() + "')."
+				);
         	}
         }
         

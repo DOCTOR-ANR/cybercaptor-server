@@ -56,6 +56,22 @@ public class Patch extends Remediation {
      */
     private String name = "";
 
+    public static Patch upgradeToLastKnownVersion(Connection conn, String product) throws SQLException {
+
+	Patch result = null;
+
+	// TODO: create table in database and extract info from it
+	if( product.equals("docker") ) {
+
+		Patch dockerPatch = new Patch("https://docs.docker.com/release-notes/docker-ce/", "18.03.0-ce");
+		dockerPatch.setName("docker upgrade to last version");
+
+		result = dockerPatch;
+	}
+
+	return result;
+    }
+
     /**
      * Find a patch in the Database from an id
      *
@@ -217,7 +233,7 @@ public class Patch extends Remediation {
      * @return a list of vulnerabilities corrected by the patch
      * @throws java.sql.SQLException
      */
-    public List<Vulnerability> getCorectedVulnerabilities(Connection conn) throws Exception {
+    public List<Vulnerability> getCorrectedVulnerabilities(Connection conn) throws Exception {
         List<Vulnerability> result = new ArrayList<Vulnerability>();
         if (this.inDatabase(conn)) {
             PreparedStatement pstmt = conn.prepareStatement("SELECT id_vulnerability FROM patchs_vulnerability WHERE id_patch = ?");
